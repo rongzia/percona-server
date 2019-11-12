@@ -25,3 +25,6 @@ extra/wolfssl-*
 /GPATH
 /GRTAGS
 /GTAGS
+
+# cmake build files
+build/
