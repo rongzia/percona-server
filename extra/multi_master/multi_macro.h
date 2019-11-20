@@ -1,0 +1,7 @@
+#ifndef MULTI_MASTER_MACRO_HEADER
+#define MULTI_MASTER_MACRO_HEADER
+
+/*macro for wei*/
+#define MULTI_MASTER_WEI_NORMAL
+
+#endif // !MULTI_MASTER_MACRO_HEADER

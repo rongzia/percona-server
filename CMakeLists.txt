@@ -522,6 +522,12 @@ INCLUDE(curl)
 INCLUDE(prepend_append_cflags_if_supported)
 INCLUDE(rapidjson)
 
+# ifdef MULTI_MASTER_WEI_CMAKE
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/multi_master/easylog.cmake)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/extra/multi_master/)
+MYSQL_CHECK_SQDLOG()
+#endif
+
 OPTION(WITH_JEMALLOC "Use jemalloc rather than builtin malloc/free etc." OFF)
 IF(WITH_JEMALLOC)
   FIND_LIBRARY(JEMALLOC_LIBRARY NAMES jemalloc)

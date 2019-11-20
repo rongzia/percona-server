@@ -82,6 +82,11 @@ this program; if not, write to the Free Software Foundation, Inc.,
 #include "ut0new.h"
 #endif /* !UNIV_HOTBACKUP */
 
+#include"multi_macro.h"
+#ifdef MULTI_MASTER_WEI_NORMAL
+#include"easylogger.h"
+#endif // !1
+
 #ifdef HAVE_LIBNUMA
 #include <numa.h>
 #include <numaif.h>
@@ -4228,6 +4233,10 @@ buf_block_t *buf_page_get_gen(const page_id_t &page_id,
 
   ut_ad(page_size.equals_to(space_page_size));
 #endif /* UNIV_DEBUG */
+
+#ifdef MULTI_MASTER_WEI_NORMAL
+  EasyLoggerWithTrace("/home/weixiaoxian/async_log.txt",EasyLogger::error) << page_id.space() << "----" << page_id.page_no();
+#endif // !1
 
   if (mode == Page_fetch::NORMAL && !fsp_is_system_temporary(page_id.space())) {
     Buf_fetch_normal fetch(page_id, page_size, err);
