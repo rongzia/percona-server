@@ -19,7 +19,7 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
-#include "mysys/my_static.h"
+//#include "mysys/my_static.h"
 
 #include "sql/sql_thd_internal_api.h"
 
@@ -262,9 +262,9 @@ bool is_mysql_datadir_path(const char *path) {
 }
 
 int mysql_tmpfile_path(const char *path, const char *prefix) {
-#ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "mysql_tmpfile_path(), arg[path] : " << path << ", arg[prefix] : " << prefix;
-#endif // MULTI_MASTER_ZHANG_LOG
+//#ifdef MULTI_MASTER_ZHANG_LOG
+//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "mysql_tmpfile_path(), arg[path] : " << path << ", arg[prefix] : " << prefix;
+//#endif // MULTI_MASTER_ZHANG_LOG
   DBUG_ASSERT(path != NULL);
   DBUG_ASSERT((strlen(path) + strlen(prefix)) <= FN_REFLEN);
 
@@ -275,9 +275,9 @@ int mysql_tmpfile_path(const char *path, const char *prefix) {
 #endif /* _WIN32 */
                                  O_CREAT | O_EXCL | O_RDWR,
                              UNLINK_FILE, MYF(MY_WME));
-#ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "mysql_tmpfile_path() return fd : " << fd;
-#endif // MULTI_MASTER_ZHANG_LOG
+//#ifdef MULTI_MASTER_ZHANG_LOG
+//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "mysql_tmpfile_path() return fd : " << fd;
+//#endif // MULTI_MASTER_ZHANG_LOG
   return fd;
 }
 

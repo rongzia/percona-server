@@ -167,7 +167,7 @@ bool my_enable_symlinks = false;
 
 
 
-std::string log_path = std::string("/home/zhangrongrong/LOG");
+
 remote::RemoteClient *remote_client = new remote::RemoteClient("10.11.6.120", "50051", "10002");
 
 int GetPathByFd(int fd, char *buf) {

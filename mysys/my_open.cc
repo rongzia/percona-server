@@ -147,7 +147,7 @@ File my_unix_socket_connect(const char *FileName, myf MyFlags) noexcept
   if (connect(sd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) ==
       -1) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[path] close fd : " << sd << ", by my_unix_socket_connect().";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "close fd:" << sd << ", by my_unix_socket_connect().";
 #endif // MULTI_MASTER_ZHANG_LOG
     close(sd);
     sd = -1;

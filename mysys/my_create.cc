@@ -32,7 +32,6 @@
 
 #include <fcntl.h>
 
-
 #include "my_sys.h"
 #if defined(_WIN32)
 #include <share.h>

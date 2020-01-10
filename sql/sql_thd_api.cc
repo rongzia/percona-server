@@ -21,7 +21,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 */
-#include "mysys/my_static.h"
+//#include "mysys/my_static.h"
 
 #include <string.h>
 #include <sys/types.h>
@@ -300,10 +300,10 @@ void thd_binlog_pos(const MYSQL_THD thd, const char **file_var,
 }
 
 int mysql_tmpfile(const char *prefix) {
-#ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "mysql_tmpfile(), mysql_tmpdir : "
-  << mysql_tmpdir << ", arg[prefix] : " << prefix << ", invoke sql_thd_internal_api.cc::mysql_tmpfile_path()";
-#endif
+//#ifdef MULTI_MASTER_ZHANG_LOG
+//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "mysql_tmpfile(), mysql_tmpdir : "
+//  << mysql_tmpdir << ", arg[prefix] : " << prefix << ", invoke sql_thd_internal_api.cc::mysql_tmpfile_path()";
+//#endif
   return mysql_tmpfile_path(mysql_tmpdir, prefix);
 }
 

@@ -195,9 +195,8 @@ bool os_is_o_direct_supported() {
 
   /* Try to create a temp file with O_DIRECT flag. */
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] " << file_name << ", call by os_is_o_direct_supported().";
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
-#endif
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << file_name << ", call by os_is_o_direct_supported().";
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
   file_handle =
@@ -206,7 +205,10 @@ bool os_is_o_direct_supported() {
 #else
   file_handle =
           remote_client->remote_open(file_name, O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
-#endif
+#endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << file_name << ", fd:" << file_handle;
+#endif // MULTI_MASTER_ZHANG_LOG
 
   /* If Failed */
   if (file_handle == -1) {
@@ -1710,20 +1712,20 @@ parameter (--tmpdir).
 @return temporary file handle, or NULL on error */
 FILE *os_file_create_tmpfile(const char *path) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "os_file_create_tmpfile(), path:" << path << "invoke ha_innodb.cc::innobase_mysql_tmpfile()";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "os_file_create_tmpfile(), arg[path]:" << path << "invoke ha_innodb.cc::innobase_mysql_tmpfile()";
 #endif // MULTI_MASTER_ZHANG_LOG
   FILE *file = NULL;
   int fd = innobase_mysql_tmpfile(path);
-#ifdef MULTI_MASTER_ZHANG_LOG
-  char path_buf[1024];
-  GetPathByFd(fd, path_buf);
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "os_file_create_tmpfile() open file:" << path_buf << ", fd:" << fd;
-#endif // MULTI_MASTER_ZHANG_LOG
+//#ifdef MULTI_MASTER_ZHANG_LOG
+//  char path_buf[1024];
+//  GetPathByFd(fd, path_buf);
+//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "os_file_create_tmpfile() create file:" << path_buf << ", fd:" << fd;
+//#endif // MULTI_MASTER_ZHANG_LOG
   if (fd >= 0) {
     file = fdopen(fd, "w+b");
-#ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "os_file_create_tmpfile() fdopen file: " << path_buf << ", fd:" << file->_fileno;
-#endif // MULTI_MASTER_ZHANG_LOG
+//#ifdef MULTI_MASTER_ZHANG_LOG
+//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "os_file_create_tmpfile() create file: " << path_buf << ", fd:" << file->_fileno;
+//#endif // MULTI_MASTER_ZHANG_LOG
   }
 
   if (file == NULL) {
@@ -1744,7 +1746,7 @@ FILE *os_file_create_tmpfile(const char *path) {
     }
   }
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "fileno : " << file->_fileno;
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "return fileno : " << file->_fileno;
 #endif
   return (file);
 }
@@ -3091,9 +3093,8 @@ bool AIO::is_linux_native_aio_supported() {
     strcpy(name + dirnamelen, "ib_logfile0");
 
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] " << name;
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
-#endif
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << name;
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
     fd = ::open(name, O_RDONLY);
@@ -3101,7 +3102,10 @@ bool AIO::is_linux_native_aio_supported() {
 //! to remote_fun :
     fd =
     remote_client->remote_open(name, O_RDONLY);
-#endif
+#endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << name << ", fd:" << fd;
+#endif // MULTI_MASTER_ZHANG_LOG
 
     if (fd == -1) {
       ib::warn(ER_IB_MSG_764) << "Unable to open"
@@ -3509,9 +3513,8 @@ os_file_t os_file_create_simple_func(const char *name, ulint create_mode,
 
   do {
 #ifdef MULTI_MASTER_ZHANG_LOG
-    EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] create : " << name;
-    EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
-#endif
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create file:" << name;
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
     file = ::open(name, create_flag | create_o_sync, os_innodb_umask);
@@ -3519,7 +3522,10 @@ os_file_t os_file_create_simple_func(const char *name, ulint create_mode,
 //! to remote_fun :
     file =
     remote_client->remote_open((char *)name, create_flag | create_o_sync, os_innodb_umask);
-#endif
+#endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create file:" << name << ", fd:" << file;
+#endif // MULTI_MASTER_ZHANG_LOG
 
     if (file == -1) {
       *success = false;
@@ -3780,6 +3786,10 @@ pfs_os_file_t os_file_create_func(const char *name, ulint create_mode,
   bool retry;
 
   do {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  std::string str = (strncmp(mode_str, "CREATE", 6) == 0) ? "create file:" : "open file:";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << str << name;
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
     file.m_file = ::open(name, create_flag, os_innodb_umask);
@@ -3789,10 +3799,9 @@ pfs_os_file_t os_file_create_func(const char *name, ulint create_mode,
     remote_client->remote_open(name, create_flag, os_innodb_umask);
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  std::string str = (strncmp(mode_str, "CREATE", 6) == 0) ? "create : " : "open : ";
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() <<  str << name << ", fd:" << file.m_file;
-//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << str << name << ", fd:" << file.m_file;
 #endif // MULTI_MASTER_ZHANG_LOG
+
 
     if (file.m_file == -1) {
       const char *operation;
@@ -3916,9 +3925,8 @@ pfs_os_file_t os_file_create_simple_no_error_handling_func(const char *name,
   }
 
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] " << name;
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
-#endif
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:"<< name;
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
   file.m_file = ::open(name, create_flag, os_innodb_umask);
@@ -3926,7 +3934,10 @@ pfs_os_file_t os_file_create_simple_no_error_handling_func(const char *name,
 //! to remote_fun :
   file.m_file =
   remote_client->remote_open(name, create_flag, os_innodb_umask);
-#endif
+#endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:"<< name << ", fd:" << file.m_file;
+#endif // MULTI_MASTER_ZHANG_LOG
 
   *success = (file.m_file != -1);
 
@@ -4265,9 +4276,8 @@ static dberr_t os_file_get_status_posix(const char *path,
                         stat_info->type == OS_FILE_TYPE_BLOCK)) {
     int access = !read_only ? O_RDWR : O_RDONLY;
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] open : " <<path;
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
-#endif
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "open file:" << path;
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
     int fh = ::open(path, access, os_innodb_umask);
@@ -4275,7 +4285,10 @@ static dberr_t os_file_get_status_posix(const char *path,
 //! to remote_fun :
     int fh =
     remote_client->remote_open(path, access, os_innodb_umask);
-#endif
+#endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "open file:" << path << ", fd:" << fh;
+#endif // MULTI_MASTER_ZHANG_LOG
 
     if (fh == -1) {
       stat_info->rw_perm = false;
@@ -7147,9 +7160,8 @@ void os_fusionio_get_sector_size() {
     /* Create a tmp file for checking sector size. */
 
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] open : " <<path;
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
-#endif
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "open file:" << path;
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
     check_file = ::open(check_file_name,
@@ -7159,7 +7171,11 @@ void os_fusionio_get_sector_size() {
     check_file =
             remote_client->remote_open(check_file_name,
                         O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
-#endif
+#endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "open file:" << path << ", fd:" << check_file;
+#endif // MULTI_MASTER_ZHANG_LOG
+
     if (check_file == -1) {
       ib::error(ER_IB_MSG_830)
           << "Failed to create check sector file, errno:" << errno

@@ -41,7 +41,7 @@ this program; if not, write to the Free Software Foundation, Inc.,
 *****************************************************************************/
 
 /** @file ha_innodb.cc */
-#include "mysys/my_static.h"
+//#include "mysys/my_static.h"
 
 #ifndef UNIV_HOTBACKUP
 #include "my_config.h"
@@ -2519,10 +2519,10 @@ path. If the path is NULL, then it will be created in --tmpdir.
 @param[in]	path	location for creating temporary file
 @return temporary file descriptor, or < 0 on error */
 int innobase_mysql_tmpfile(const char *path) {
-#ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "innobase_mysql_tmpfile(), path : " << path
-  << "invoke sql_thd_api.cc::mysql_tmpfile[_path]()";;
-#endif // MULTI_MASTER_ZHANG_LOG
+//#ifdef MULTI_MASTER_ZHANG_LOG
+//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "innobase_mysql_tmpfile(), path : " << path
+//  << "invoke sql_thd_api.cc::mysql_tmpfile[_path]()";;
+//#endif // MULTI_MASTER_ZHANG_LOG
   int fd2 = -1;
   File fd;
 
@@ -2572,15 +2572,15 @@ int innobase_mysql_tmpfile(const char *path) {
       my_error(EE_OUT_OF_FILERESOURCES, MYF(0), "ib*", my_errno(),
                my_strerror(errbuf, sizeof(errbuf), my_errno()));
     }
-#ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "innobase_mysql_tmpfile() invoke my_close, try to close fd:" << fd;
-#endif
+//#ifdef MULTI_MASTER_ZHANG_LOG
+//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "innobase_mysql_tmpfile() invoke my_close, try to close fd:" << fd;
+//#endif
     my_close(fd, MYF(MY_WME));
   }
 
-#ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "innobase_mysql_tmpfile() return fd2:" << fd2;
-#endif
+//#ifdef MULTI_MASTER_ZHANG_LOG
+//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "innobase_mysql_tmpfile() return fd2:" << fd2;
+//#endif
   return (fd2);
 }
 

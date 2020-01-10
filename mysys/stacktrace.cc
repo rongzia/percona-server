@@ -124,19 +124,12 @@ static int safe_print_str(const char *addr, int max_len) {
   sprintf(buf, "/proc/self/task/%d/mem", tid);
 
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [path] create or open file : " << buf << ", by safe_print_str().";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << buf << ", by safe_print_str().";
 #endif // MULTI_MASTER_ZHANG_LOG
-#ifndef MULTI_MASTER_ZHANG_REMOTE
-//! change :
   fd = open(buf, O_RDONLY);
-#else
-//! to remote_fun :
-  fd =
-  remote_client->remote_open(buf, O_RDONLY);
-  remote_map.insert(std::make_pair(fd, buf));
-#endif // MULTI_MASTER_ZHANG_REMOTE
+  local_map.insert(std::make_pair(fd, buf));
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [path] create or open file : " << buf << ", fd:" << fd << ", by safe_print_str().";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << buf << ", fd:" << fd << ", by safe_print_str().";
 #endif // MULTI_MASTER_ZHANG_LOG
   if (fd < 0) return -1;
 
@@ -150,7 +143,7 @@ static int safe_print_str(const char *addr, int max_len) {
   while (total) {
     count = MY_MIN(sizeof(buf), total);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[path] pread fd : " << fd << ", by safe_print_str()";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "pread fd:" << fd << ", by safe_print_str()";
 #endif // MULTI_MASTER_ZHANG_LOG
     if ((nbytes = pread(fd, buf, count, offset)) < 0) {
       /* Just in case... */
@@ -177,7 +170,7 @@ static int safe_print_str(const char *addr, int max_len) {
 
   if (nbytes == -1) my_safe_printf_stderr("Can't read from address %p\n", addr);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[path] close fd : " << fd << ", by safe_print_str().";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "close fd:" << fd << ", by safe_print_str().";
 #endif // MULTI_MASTER_ZHANG_LOG
   close(fd);
 

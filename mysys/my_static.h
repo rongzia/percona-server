@@ -50,7 +50,9 @@ extern struct st_my_file_info my_file_info_default[MY_NFILE];
 #include "handle_net.h"
 #include "handle_struct.h"
 #include <map>
-extern std::string log_path;
+namespace {
+    std::string log_path = std::string("/home/zhangrongrong/LOG");
+}
 extern remote::RemoteClient *remote_client;
 extern int GetPathByFd(int fd, char *buf);
 extern std::map<int, std::string> local_map;

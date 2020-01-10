@@ -88,14 +88,14 @@
 File create_temp_file(char *to, const char *dir, const char *prefix,
                       int mode MY_ATTRIBUTE((unused)),
                       UnlinkOrKeepFile unlink_or_keep, myf MyFlags) {
-#ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[args] : "
-  << ", to : " << to
-  << ", dir : " << dir
-  << ", prefix : " << prefix
-  << ", unlink_or_keep : " << (unlink_or_keep == UNLINK_FILE ? "UNLINK_FILE" : "KEEP_FILE")
-  << ", MyFlags" << MyFlags;
-#endif // MULTI_MASTER_ZHANG_LOG
+//#ifdef MULTI_MASTER_ZHANG_LOG
+//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[args] : "
+//  << ", to : " << to
+//  << ", dir : " << dir
+//  << ", prefix : " << prefix
+//  << ", unlink_or_keep : " << (unlink_or_keep == UNLINK_FILE ? "UNLINK_FILE" : "KEEP_FILE")
+//  << ", MyFlags" << MyFlags;
+//#endif // MULTI_MASTER_ZHANG_LOG
   File file = -1;
 #ifdef _WIN32
   TCHAR path_buf[MAX_PATH - 14];
@@ -160,19 +160,12 @@ File create_temp_file(char *to, const char *dir, const char *prefix,
        meaning with O_TMPFILE.
     */
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file : " << dirname_buf << ", by create_temp_file().";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create temp file:" << dirname_buf << ", by create_temp_file().";
 #endif // MULTI_MASTER_ZHANG_LOG
-#ifndef MULTI_MASTER_ZHANG_REMOTE
-//! change :
     file = open(dirname_buf, O_RDWR | O_TMPFILE | O_CLOEXEC, S_IRUSR | S_IWUSR);
-#else
-//! to local_fun :
-    file =
-    remote_client->remote_open(dirname_buf, O_RDWR | O_TMPFILE | O_CLOEXEC, S_IRUSR | S_IWUSR);
     local_map.insert(std::make_pair(file, std::string(dirname_buf)));
-#endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file : " << dirname_buf << ", fd:" << file << ", by create_temp_file().";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create temp file:" << dirname_buf << ", fd:" << file << ", by create_temp_file().";
 #endif // MULTI_MASTER_ZHANG_LOG
 
     if (file >= 0) {

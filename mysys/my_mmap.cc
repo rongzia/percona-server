@@ -28,7 +28,6 @@
 /**
   @file mysys/my_mmap.cc
 */
-#include "mysys/my_static.h"
 
 #include "my_config.h"
 
