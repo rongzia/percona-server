@@ -30,6 +30,7 @@
   Get hardware address for an interface.
   If there are many available, any non-zero one can be used.
 */
+#include "mysys/my_static.h"
 
 #include "my_config.h"
 
@@ -112,6 +113,9 @@ bool my_gethwaddr(uchar *to) {
   ifc.ifc_len = sizeof(ifs);
   ifc.ifc_req = ifs;
   if (ioctl(fd, SIOCGIFCONF, &ifc) < 0) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[path] close fd : " << fd << ", by my_gethwaddr().";
+#endif // MULTI_MASTER_ZHANG_LOG
     close(fd);
     return 1;
   }
@@ -139,6 +143,9 @@ bool my_gethwaddr(uchar *to) {
       }
     }
   }
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[path] close fd : " << fd << ", by my_gethwaddr().";
+#endif // MULTI_MASTER_ZHANG_LOG
   close(fd);
   return res;
 }

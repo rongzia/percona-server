@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
-
+message("building sql")
 
 INCLUDE_DIRECTORIES(
   ${CMAKE_SOURCE_DIR}/libbinlogevents/include
@@ -922,8 +922,16 @@ IF(NOT DISABLE_SHARED)
   ENDIF()
 ENDIF()
 
-SET_TARGET_PROPERTIES(mysqld PROPERTIES ENABLE_EXPORTS TRUE) 
+SET_TARGET_PROPERTIES(mysqld PROPERTIES ENABLE_EXPORTS TRUE)
+
+# END MULTI_MASTER_ZHANG
 TARGET_LINK_LIBRARIES(mysqld
+# START MULTI_MASTER_ZHANG
+# if libevent:
+  ${remote_fun} ${multi_net_io} ${event} pthread
+# else if grpc:
+# ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY}
+# END MULTI_MASTER_ZHANG
   sql_main sql_gis binlog rpl master slave sql_dd mysys
   binlogevents_static ${ICU_LIBRARIES})
 

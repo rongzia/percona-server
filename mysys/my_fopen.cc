@@ -28,6 +28,7 @@
 /**
   @file mysys/my_fopen.cc
 */
+#include "mysys/my_static.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -74,6 +75,9 @@ FILE *my_fopen(const char *filename, int flags, myf MyFlags) {
   fd = my_win_fopen(filename, type);
 #else
   fd = fopen(filename, type);
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << filename << ", fd:" << fd->_fileno << ", by my_fopen().";
+#endif // MULTI_MASTER_ZHANG_LOG
 #endif
   if (fd != 0) {
     /*
@@ -177,6 +181,9 @@ FILE *my_freopen(const char *path, const char *mode, FILE *stream) {
   result = my_win_freopen(path, mode, stream);
 #else
   result = freopen(path, mode, stream);
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << path << ", fd:" << result->_fileno << ", by my_freopen().";
+#endif // MULTI_MASTER_ZHANG_LOG
 #endif
 
   return result;

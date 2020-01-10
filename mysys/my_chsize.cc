@@ -28,6 +28,7 @@
 /**
   @file mysys/my_chsize.cc
 */
+#include "mysys/my_static.h"
 
 #include "my_config.h"
 
@@ -89,6 +90,9 @@ int my_chsize(File fd, my_off_t newlength, int filler, myf MyFlags) {
     }
     DBUG_RETURN(0);
 #elif defined(HAVE_FTRUNCATE)
+ #ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [path] ftruncate fd : " << fd << ", by my_chsize()";
+#endif // MULTI_MASTER_ZHANG_LOG
     if (ftruncate(fd, (off_t)newlength)) {
       set_my_errno(errno);
       goto err;

@@ -28,6 +28,7 @@
 /**
   @file mysys/my_pread.cc
 */
+#include "mysys/my_static.h"
 
 #include "my_config.h"
 
@@ -92,6 +93,9 @@ size_t my_pread(File Filedes, uchar *Buffer, size_t Count, my_off_t offset,
 #if defined(_WIN32)
     readbytes = my_win_pread(Filedes, Buffer, Count, offset);
 #else
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [path] pread fd : " << Filedes << ", by my_pread()";
+#endif // MULTI_MASTER_ZHANG_LOG
     readbytes = pread(Filedes, Buffer, Count, offset);
 #endif
     error = (readbytes != Count);

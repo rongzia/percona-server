@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
+message("building mysys")
 
 SET(MY_TIME_SOURCES my_time.cc my_systime.cc)
 
@@ -174,6 +175,12 @@ ENDIF()
 
 ADD_CONVENIENCE_LIBRARY(mysys ${MYSYS_SOURCES}
   LINK_LIBRARIES
+# START MULTI_MASTER_ZHANG
+# if libevent:
+  ${remote_fun} ${multi_net_io} ${event} pthread
+# else if grpc:
+# ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY}
+# END MULTI_MASTER_ZHANG
   dbug
   mytime
   strings

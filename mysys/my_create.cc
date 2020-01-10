@@ -28,8 +28,10 @@
 /**
   @file mysys/my_create.cc
 */
+#include "mysys/my_static.h"
 
 #include <fcntl.h>
+
 
 #include "my_sys.h"
 #if defined(_WIN32)
@@ -64,8 +66,23 @@ File my_create(const char *FileName, int CreateFlags, int access_flags,
 #if defined(_WIN32)
   fd = my_win_open(FileName, access_flags | O_CREAT);
 #else
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create file:" << FileName  << ", by my_create().";
+#endif // MULTI_MASTER_ZHANG_LOG
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   fd = open(FileName, access_flags | O_CREAT,
             CreateFlags ? CreateFlags : my_umask);
+#else
+//! to remote_fun :
+  fd =
+  remote_client->remote_open(FileName, access_flags | O_CREAT,
+            CreateFlags ? CreateFlags : my_umask);
+  remote_map.insert(std::make_pair(fd, FileName));
+#endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create file:" << FileName << ", fd:" << fd << ", by my_create().";
+#endif // MULTI_MASTER_ZHANG_LOG
 #endif
 
   if ((MyFlags & MY_SYNC_DIR) && (fd >= 0) &&

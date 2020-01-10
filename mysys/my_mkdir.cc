@@ -28,6 +28,7 @@
 /**
   @file mysys/my_mkdir.cc
 */
+#include "mysys/my_static.h"
 
 #include <errno.h>
 #include <sys/stat.h>
@@ -48,8 +49,28 @@ int my_mkdir(const char *dir, int Flags, myf MyFlags) {
 #if defined(_WIN32)
   if (_mkdir(dir))
 #else
-  if (mkdir(dir, Flags & my_umask_dir))
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[path] mkdir:" << dir << ", by my_mkdir().";
+#endif // MULTI_MASTER_ZHANG_LOG
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
+  int ret = mkdir(dir, Flags & my_umask_dir);
+#else
+//! to remote_fun :
+  int ret;
+  if(0 == strncmp(dir, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
+          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"))
+  || 0 == strncmp(dir, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"
+          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
+  ){
+    ret = mkdir(dir, Flags & my_umask_dir);
+  } else {
+    ret =
+    remote_client->remote_mkdir(dir, Flags & my_umask_dir);
+  }
+#endif // MULTI_MASTER_ZHANG_REMOTE
 #endif
+  if( ret != 0)
   {
     set_my_errno(errno);
     DBUG_PRINT("error",

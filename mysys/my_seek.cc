@@ -28,6 +28,7 @@
 /**
   @file mysys/my_seek.cc
 */
+#include "mysys/my_static.h"
 
 #include "my_config.h"
 
@@ -92,6 +93,9 @@ my_off_t my_seek(File fd, my_off_t pos, int whence, myf MyFlags) {
 #if defined(_WIN32)
   newpos = my_win_lseek(fd, pos, whence);
 #else
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[path] lseek fd : " << fd << ", by my_seek().";
+#endif // MULTI_MASTER_ZHANG_LOG
   newpos = lseek(fd, pos, whence);
 #endif
   if (newpos == (os_off_t)-1) {

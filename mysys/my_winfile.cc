@@ -488,6 +488,9 @@ FILE *my_win_fopen(const char *filename, const char *type) {
     DBUG_RETURN(NULL);
   }
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [path] create or open file : " << filename << ", by my_win_fopen().";
+#endif // MULTI_MASTER_ZHANG_LOG
   file = fopen(filename, type);
   if (!file) DBUG_RETURN(NULL);
 

@@ -28,6 +28,7 @@
 /**
   @file mysys/my_rename.cc
 */
+#include "mysys/my_static.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -50,11 +51,23 @@ int my_rename(const char *from, const char *to, myf MyFlags) {
 
 #if defined(_WIN32)
   if (!MoveFileEx(from, to,
-                  MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING)) {
+                  MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING))
     my_osmaperr(GetLastError());
 #else
-  if (rename(from, to)) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [path] rename from " << from << " to " << to << ", by my_rename().";
+#endif // MULTI_MASTER_ZHANG_LOG
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
+  int ret = rename(from, to);
+#else
+//! to remote_fun :
+  int ret =
+  remote_client->remote_rename(from, to);
+#endif // MULTI_MASTER_ZHANG_REMOTE
 #endif
+  if (ret != 0)
+  {
     set_my_errno(errno);
     error = -1;
     if (MyFlags & (MY_FAE + MY_WME)) {

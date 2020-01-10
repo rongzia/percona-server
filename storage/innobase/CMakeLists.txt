@@ -21,7 +21,8 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 # This is the CMakeLists for InnoDB
-
+message("building innobase")
+message("PROJECT_SOURCE_DIR : " ${PROJECT_SOURCE_DIR})
 INCLUDE(innodb.cmake)
 
 ADD_DEFINITIONS(-DLOG_SUBSYSTEM_TAG="InnoDB")
@@ -230,11 +231,20 @@ IF(HAVE_LIBNUMA)
   SET(NUMA_LIBRARY "numa")
 ENDIF()
 
+
 MYSQL_ADD_PLUGIN(innobase
   ${INNOBASE_SOURCES} ${INNOBASE_ZIP_DECOMPRESS_SOURCES} STORAGE_ENGINE
   MANDATORY
   MODULE_OUTPUT_NAME ha_innodb
-  LINK_LIBRARIES sql_dd sql_gis ${ZLIB_LIBRARY} ${LZ4_LIBRARY} ${NUMA_LIBRARY})
+  LINK_LIBRARIES
+# START MULTI_MASTER_ZHANG
+# if libevent:
+  ${remote_fun} ${multi_net_io} ${event} pthread
+# else if grpc:
+# ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY}
+# END MULTI_MASTER_ZHANG
+  sql_dd sql_gis ${ZLIB_LIBRARY} ${LZ4_LIBRARY} ${NUMA_LIBRARY}
+  )
 
 
 IF(WITH_INNOBASE_STORAGE_ENGINE)

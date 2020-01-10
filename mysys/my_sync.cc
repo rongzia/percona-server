@@ -91,6 +91,9 @@ int my_sync(File fd, myf my_flags) {
 #if defined(HAVE_FDATASYNC) && defined(HAVE_DECL_FDATASYNC)
     res = fdatasync(fd);
 #elif defined(HAVE_FSYNC)
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[path] fsync fd : " << fd << ", by my_sync().";
+#endif // MULTI_MASTER_ZHANG_LOG
     res = fsync(fd);
 #elif defined(_WIN32)
     res = my_win_fsync(fd);

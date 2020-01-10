@@ -75,7 +75,9 @@ static void *timer_notify_thread_func(void *arg MY_ATTRIBUTE((unused))) {
     } else if (kev.filter == EVFILT_USER)
       break;
   }
-
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[path] close fd : " << kq_fd << ", by timer_notify_thread_func().";
+#endif // MULTI_MASTER_ZHANG_LOG
   close(kq_fd);
   my_thread_end();
 
@@ -121,6 +123,9 @@ int my_timer_initialize(void) {
   /* Create a helper thread. */
   if ((rc = start_helper_thread())) {
     my_message_local(ERROR_LEVEL, EE_FAILED_TO_START_TIMER_NOTIFY_THREAD);
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[path] close fd : " << kq_fd << ", by my_timer_initialize().";
+#endif // MULTI_MASTER_ZHANG_LOG
     close(kq_fd);
   }
 

@@ -37,7 +37,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
  Created 10/21/1995 Heikki Tuuri
  *******************************************************/
+#include "mysys/my_static.h"
 
+
+//#endif
 #include "os0file.h"
 #include "btr0types.h"
 #include "fil0crypt.h"
@@ -191,8 +194,19 @@ bool os_is_o_direct_supported() {
   strcat(file_name + dir_len, "o_direct_test");
 
   /* Try to create a temp file with O_DIRECT flag. */
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] " << file_name << ", call by os_is_o_direct_supported().";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   file_handle =
       ::open(file_name, O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
+//! to remote_fun :
+#else
+  file_handle =
+          remote_client->remote_open(file_name, O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
+#endif
 
   /* If Failed */
   if (file_handle == -1) {
@@ -200,8 +214,19 @@ bool os_is_o_direct_supported() {
     return (false);
   }
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] close";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] unlink";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   ::close(file_handle);
   unlink(file_name);
+//! to remote_fun :
+#else
+  remote_client->remote_close(file_handle);
+  remote_client->remote_unlink(file_name);
+#endif
   ut_free(file_name);
 
   return (true);
@@ -1548,8 +1573,31 @@ static int os_file_lock(int fd, const char *name) {
   lk.l_type = F_WRLCK;
   lk.l_whence = SEEK_SET;
   lk.l_start = lk.l_len = 0;
+///**
+//@AUTHOR (rrzhang, 张融荣)
+// * 注释掉文件锁，可以实现多进程读同一个 data 目录功能。
+// * The function of reading the same data directory by multiple processes can be realized by commenting out the file lock.
+// */
+//#ifdef MULTI_MASTER_ZHANG_DEBUG
+//  int flag = 0;
+//#else
+//  int flag = fcntl(fd, F_SETLK, &lk);
+//#endif
+//#ifdef MULTI_MASTER_ZHANG_NORMAL
+//EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "fcntl";
+//#endif
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] fcntl";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   if (fcntl(fd, F_SETLK, &lk) == -1) {
+#else
+//! to remote_fun :
+  int flag = remote_client->remote_fcntl(fd, F_SETLK, &lk);
+  if (flag == -1) {
+#endif
     ib::error(ER_IB_MSG_749)
         << "Unable to lock " << name << " error: " << errno;
 
@@ -1661,11 +1709,21 @@ parameter (--tmpdir).
 @param[in]	path	location for creating temporary file
 @return temporary file handle, or NULL on error */
 FILE *os_file_create_tmpfile(const char *path) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "os_file_create_tmpfile(), path:" << path << "invoke ha_innodb.cc::innobase_mysql_tmpfile()";
+#endif // MULTI_MASTER_ZHANG_LOG
   FILE *file = NULL;
   int fd = innobase_mysql_tmpfile(path);
-
+#ifdef MULTI_MASTER_ZHANG_LOG
+  char path_buf[1024];
+  GetPathByFd(fd, path_buf);
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "os_file_create_tmpfile() open file:" << path_buf << ", fd:" << fd;
+#endif // MULTI_MASTER_ZHANG_LOG
   if (fd >= 0) {
     file = fdopen(fd, "w+b");
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "os_file_create_tmpfile() fdopen file: " << path_buf << ", fd:" << file->_fileno;
+#endif // MULTI_MASTER_ZHANG_LOG
   }
 
   if (file == NULL) {
@@ -1673,10 +1731,21 @@ FILE *os_file_create_tmpfile(const char *path) {
         << "Unable to create temporary file; errno: " << errno;
 
     if (fd >= 0) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "close fd : " << fd;
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
       close(fd);
+#else
+//! to remote_fun :
+      remote_client->remote_close(fd);
+#endif
     }
   }
-
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "fileno : " << file->_fileno;
+#endif
   return (file);
 }
 #endif /* !UNIV_HOTBACKUP */
@@ -1689,7 +1758,14 @@ mostly meant to be used with temporary files.
 @param[in]	size		Size of buffer */
 void os_file_read_string(FILE *file, char *str, ulint size) {
   if (size != 0) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] rewind";
+#endif
     rewind(file);
+
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] fread";
+#endif
 
     size_t flen = fread(str, 1, size - 1, file);
 
@@ -2241,10 +2317,28 @@ ssize_t SyncFileIO::execute(const IORequest &request) {
   ssize_t n_bytes;
 
   if (request.is_read()) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] pread";
+#endif // MULTI_MASTER_ZHANG_LOG
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     n_bytes = pread(m_fh, m_buf, m_n, m_offset);
+#else
+//! to remote_fun :
+    n_bytes = remote_client->remote_pread(m_fh, m_buf, m_n, m_offset);
+#endif // MULTI_MASTER_ZHANG_REMOTE
   } else {
     ut_ad(request.is_write());
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] pwrite fd:" << m_fh << ", size:" << m_n;
+#endif // MULTI_MASTER_ZHANG_LOG
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     n_bytes = pwrite(m_fh, m_buf, m_n, m_offset);
+#else
+//! to remote_fun :
+    n_bytes = remote_client->remote_pwrite(m_fh, m_buf, m_n, m_offset);
+#endif // MULTI_MASTER_ZHANG_REMOTE
   }
 
   return (n_bytes);
@@ -2269,7 +2363,21 @@ static dberr_t os_file_punch_hole_posix(os_file_t fh, os_offset_t off,
 #ifdef HAVE_FALLOC_PUNCH_HOLE_AND_KEEP_SIZE
   const int mode = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] fallocate";
+#endif // MULTI_MASTER_ZHANG_LOG
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   int ret = fallocate(fh, mode, off, len);
+#else
+//! to remote_fun :
+  int ret =
+  remote_client->remote_fallocate(fh, mode, off, len);
+  char buf[1024];
+  GetPathByFd(fh, buf);
+  EasyLoggerWithTrace("/home/zhangrongrong/LOG_REMOTE_CLIENT", EasyLogger::info).force_flush()
+  << " [lib_function] fallocate file : " << buf << ", fd : " << fh << ", ret : " << ret;
+#endif // MULTI_MASTER_ZHANG_REMOTE
 
   if (ret == 0) {
     return (DB_SUCCESS);
@@ -2982,7 +3090,18 @@ bool AIO::is_linux_native_aio_supported() {
 
     strcpy(name + dirnamelen, "ib_logfile0");
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] " << name;
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     fd = ::open(name, O_RDONLY);
+#else
+//! to remote_fun :
+    fd =
+    remote_client->remote_open(name, O_RDONLY);
+#endif
 
     if (fd == -1) {
       ib::warn(ER_IB_MSG_764) << "Unable to open"
@@ -3024,7 +3143,17 @@ bool AIO::is_linux_native_aio_supported() {
   }
 
   ut_free(buf);
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] close";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   close(fd);
+#else
+//! to remote_fun :
+  remote_client->remote_close(fd);
+#endif
+
 
   switch (err) {
     case 1:
@@ -3146,7 +3275,16 @@ static int os_file_fsync_posix(os_file_t file) {
     meb_mutex.unlock();
 #endif /* UNIV_HOTBACKUP */
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] fsync";
+#endif// MULTI_MASTER_ZHANG_LOG
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     int ret = fsync(file);
+#else
+//! to remote_fun :
+    int ret = remote_client->remote_fsync(file);
+#endif
 
     if (ret == 0) {
       return (ret);
@@ -3202,13 +3340,22 @@ static bool os_file_status_posix(const char *path, bool *exists,
                                  os_file_type_t *type) {
   struct stat statinfo;
 
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   int ret = stat(path, &statinfo);
+#else
+//! to remote_fun :
+  int ret = remote_client->remote_stat(path, &statinfo);
+  errno = 0 - ret - 1;
+#endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[lib_function] stat:" << path << ", ret:" << ret <<", call by os_file_get_status_posix().";
+#endif // MULTI_MASTER_ZHANG_LOG
 
   *exists = !ret;
 
   if (!ret) {
     /* file exists, everything OK */
-
   } else if (errno == ENOENT || errno == ENOTDIR) {
     if (exists != nullptr) {
       *exists = false;
@@ -3216,6 +3363,9 @@ static bool os_file_status_posix(const char *path, bool *exists,
 
     /* file does not exist */
     *type = OS_FILE_TYPE_MISSING;
+#ifdef MULTI_MASTER_ZHANG_LOG
+      EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << path << " not exists";
+#endif
     return (true);
 
   } else if (errno == ENAMETOOLONG) {
@@ -3358,7 +3508,18 @@ os_file_t os_file_create_simple_func(const char *name, ulint create_mode,
   bool retry;
 
   do {
+#ifdef MULTI_MASTER_ZHANG_LOG
+    EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] create : " << name;
+    EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     file = ::open(name, create_flag | create_o_sync, os_innodb_umask);
+#else
+//! to remote_fun :
+    file =
+    remote_client->remote_open((char *)name, create_flag | create_o_sync, os_innodb_umask);
+#endif
 
     if (file == -1) {
       *success = false;
@@ -3376,7 +3537,16 @@ os_file_t os_file_create_simple_func(const char *name, ulint create_mode,
   if (!read_only && *success && access_type == OS_FILE_READ_WRITE &&
       os_file_lock(file, name)) {
     *success = false;
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] close";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     close(file);
+#else
+//! to remote_fun :
+    remote_client->remote_close(file);
+#endif
     file = -1;
   }
 #endif /* USE_FILE_LOCK */
@@ -3397,7 +3567,23 @@ bool os_file_set_eof_at_func(os_file_t file, ib_uint64_t new_len) {
   return (SetFilePointerEx(file, li, &li2, FILE_BEGIN) && SetEndOfFile(file));
 #else
   /* TODO: works only with -D_FILE_OFFSET_BITS=64 ? */
-  return (!ftruncate(file, new_len));
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] ftruncate";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+  int ret = ftruncate(file, new_len);
+//! change :
+//  return (!ftruncate(file, new_len));
+#else
+//! to remote_fun :
+  int ret =
+  remote_client->remote_ftruncate(file, new_len);
+  char buf[1024];
+  GetPathByFd(file, buf);
+  EasyLoggerWithTrace("/home/zhangrongrong/LOG_REMOTE_CLIENT", EasyLogger::info).force_flush()
+  << " [lib_function] fallocate file : " << buf << ", fd : " << file << ", ret : " << ret;
+  return !ret;
+#endif
 #endif
 }
 
@@ -3412,7 +3598,18 @@ but reports the error and returns false.
                                 an error.
 @return true if call succeeds, false on error */
 bool os_file_create_directory(const char *pathname, bool fail_if_exists) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] mkdir : " << pathname;
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] mkdir";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   int rcode = mkdir(pathname, 0770);
+#else
+//! to remote_fun :
+  int rcode =
+  remote_client->remote_mkdir(pathname, 0770);
+#endif
 
   if (!(rcode == 0 || (errno == EEXIST && !fail_if_exists))) {
     /* failure */
@@ -3435,6 +3632,9 @@ bool os_file_scan_directory(const char *path, os_dir_cbk_t scan_cbk,
   DIR *directory;
   dirent *entry;
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] opendir, by os_file_scan_directory()";
+#endif
   directory = opendir(path);
 
   if (directory == nullptr) {
@@ -3446,14 +3646,30 @@ bool os_file_scan_directory(const char *path, os_dir_cbk_t scan_cbk,
 
   while (entry != nullptr) {
     scan_cbk(path, entry->d_name);
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] readdir, by os_file_scan_directory()";
+#endif
     entry = readdir(directory);
   }
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] closedir, by os_file_scan_directory()";
+#endif
   closedir(directory);
 
   if (is_drop) {
     int err;
+
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] rmdir, by os_file_scan_directory()";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     err = rmdir(path);
+#else
+//! to remote_fun :
+    err = remote_client->remote_rmdir(path);
+#endif
 
     if (err != 0) {
       os_file_handle_error_no_exit(path, "rmdir", false);
@@ -3564,7 +3780,19 @@ pfs_os_file_t os_file_create_func(const char *name, ulint create_mode,
   bool retry;
 
   do {
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     file.m_file = ::open(name, create_flag, os_innodb_umask);
+#else
+//! to remote_fun :
+    file.m_file =
+    remote_client->remote_open(name, create_flag, os_innodb_umask);
+#endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  std::string str = (strncmp(mode_str, "CREATE", 6) == 0) ? "create : " : "open : ";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() <<  str << name << ", fd:" << file.m_file;
+//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
+#endif // MULTI_MASTER_ZHANG_LOG
 
     if (file.m_file == -1) {
       const char *operation;
@@ -3617,7 +3845,16 @@ pfs_os_file_t os_file_create_func(const char *name, ulint create_mode,
     }
 
     *success = false;
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] close";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     close(file.m_file);
+#else
+//! to remote_fun :
+      remote_client->remote_close(file.m_file);
+#endif
     file.m_file = -1;
   }
 #endif /* USE_FILE_LOCK */
@@ -3678,7 +3915,18 @@ pfs_os_file_t os_file_create_simple_no_error_handling_func(const char *name,
     return (file);
   }
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] " << name;
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   file.m_file = ::open(name, create_flag, os_innodb_umask);
+#else
+//! to remote_fun :
+  file.m_file =
+  remote_client->remote_open(name, create_flag, os_innodb_umask);
+#endif
 
   *success = (file.m_file != -1);
 
@@ -3686,7 +3934,16 @@ pfs_os_file_t os_file_create_simple_no_error_handling_func(const char *name,
   if (!read_only && *success && access_type == OS_FILE_READ_WRITE &&
       os_file_lock(file.m_file, name)) {
     *success = false;
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] close";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     close(file.m_file);
+#else
+//! to remote_fun :
+    remote_client->remote_close(file.m_file);
+#endif
     file.m_file = -1;
   }
 #endif /* USE_FILE_LOCK */
@@ -3707,7 +3964,17 @@ bool os_file_delete_if_exists_func(const char *name, bool *exist) {
     *exist = true;
   }
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] unlink";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   int ret = unlink(name);
+#else
+//! to remote_fun :
+    int ret =
+    remote_client->remote_unlink(name);
+#endif
 
   if (ret != 0 && errno == ENOENT) {
     if (exist != nullptr) {
@@ -3727,7 +3994,17 @@ bool os_file_delete_if_exists_func(const char *name, bool *exist) {
 @param[in]	name		file path as a null-terminated string
 @return true if success */
 bool os_file_delete_func(const char *name) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] unlink";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   int ret = unlink(name);
+#else
+//! to remote_fun :
+    int ret =
+    remote_client->remote_unlink(name);
+#endif
 
   if (ret != 0) {
     os_file_handle_error_no_exit(name, "delete", false);
@@ -3759,7 +4036,17 @@ bool os_file_rename_func(const char *oldpath, const char *newpath) {
   ut_ad(exists);
 #endif /* UNIV_DEBUG */
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] rename " << oldpath << " to " << newpath;
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   int ret = rename(oldpath, newpath);
+#else
+//! to remote_fun :
+    int ret =
+    remote_client->remote_rename(oldpath, newpath);
+#endif
 
   if (ret != 0) {
     os_file_handle_error_no_exit(oldpath, "rename", false);
@@ -3777,7 +4064,17 @@ os_file_get_last_error.
 @param[in]	file		Handle to close
 @return true if success */
 bool os_file_close_func(os_file_t file) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] close";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   int ret = close(file);
+#else
+//! to remote_fun :
+  int ret =
+  remote_client->remote_close(file);
+#endif
 
   if (ret == -1) {
     os_file_handle_error(NULL, "close");
@@ -3812,6 +4109,9 @@ bool os_file_advise(pfs_os_file_t file, os_offset_t offset, os_offset_t len,
     native_advice |= POSIX_FADV_DONTNEED;
   if ((advice & OS_FILE_ADVISE_NOREUSE) != 0)
     native_advice |= POSIX_FADV_NOREUSE;
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] posix_fadvise";
+#endif
 
   return (posix_fadvise(file.m_file, offset, len, native_advice) == 0);
 #else
@@ -3824,11 +4124,24 @@ bool os_file_advise(pfs_os_file_t file, os_offset_t offset, os_offset_t len,
 @param[in]	file		handle to an open file
 @return file size, or (os_offset_t) -1 on failure */
 os_offset_t os_file_get_size(pfs_os_file_t file) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] lseek";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   /* Store current position */
   os_offset_t pos = lseek(file.m_file, 0, SEEK_CUR);
   os_offset_t file_size = lseek(file.m_file, 0, SEEK_END);
   /* Restore current position as the function should not change it */
   lseek(file.m_file, pos, SEEK_SET);
+#else
+//! to remote_fun :
+  /* Store current position */
+  os_offset_t pos = remote_client->remote_lseek(file.m_file, 0, SEEK_CUR);
+  os_offset_t file_size = remote_client->remote_lseek(file.m_file, 0, SEEK_END);
+  /* Restore current position as the function should not change it */
+  remote_client->remote_lseek(file.m_file, pos, SEEK_SET);
+#endif
   return (file_size);
 }
 
@@ -3840,7 +4153,16 @@ os_file_size_t os_file_get_size(const char *filename) {
   struct stat s;
   os_file_size_t file_size;
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] stat";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   int ret = stat(filename, &s);
+#else
+//! to remote_fun :
+  int ret = remote_client->remote_stat(filename, &s);
+#endif
 
   if (ret == 0) {
     file_size.m_total_size = s.st_size;
@@ -3859,6 +4181,9 @@ os_file_size_t os_file_get_size(const char *filename) {
 @param[out]	free_space	free space available in bytes
 @return DB_SUCCESS if all OK */
 static dberr_t os_get_free_space_posix(const char *path, uint64_t &free_space) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] stat";
+#endif
   struct statvfs stat;
   auto ret = statvfs(path, &stat);
 
@@ -3889,7 +4214,17 @@ static dberr_t os_file_get_status_posix(const char *path,
                                         os_file_stat_t *stat_info,
                                         struct stat *statinfo,
                                         bool check_rw_perm, bool read_only) {
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   int ret = stat(path, statinfo);
+#else
+//! to remote_fun :
+  int ret = remote_client->remote_stat(path, statinfo);
+  errno = ret;
+#endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[lib_function] stat : " << path << ", ret:" << ret << ", call by os_file_get_status_posix().";
+#endif // MULTI_MASTER_ZHANG_LOG
 
   if (ret && (errno == ENOENT || errno == ENOTDIR)) {
     /* file does not exist */
@@ -3929,13 +4264,33 @@ static dberr_t os_file_get_status_posix(const char *path,
   if (check_rw_perm && (stat_info->type == OS_FILE_TYPE_FILE ||
                         stat_info->type == OS_FILE_TYPE_BLOCK)) {
     int access = !read_only ? O_RDWR : O_RDONLY;
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] open : " <<path;
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     int fh = ::open(path, access, os_innodb_umask);
+#else
+//! to remote_fun :
+    int fh =
+    remote_client->remote_open(path, access, os_innodb_umask);
+#endif
 
     if (fh == -1) {
       stat_info->rw_perm = false;
     } else {
       stat_info->rw_perm = true;
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] close";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
       close(fh);
+#else
+//! to remote_fun :
+      remote_client->remote_close(fh);
+#endif
     }
   }
 
@@ -3951,7 +4306,21 @@ size of the file.
 @return true if success */
 static bool os_file_truncate_posix(const char *pathname, pfs_os_file_t file,
                                    os_offset_t size) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] ftruncate";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
   int res = ftruncate(file.m_file, size);
+#else
+//! to remote_fun :
+  int res =
+  remote_client->remote_ftruncate(file.m_file, size);
+  char buf[1024];
+  GetPathByFd(file.m_file, buf);
+  EasyLoggerWithTrace("/home/zhangrongrong/LOG_REMOTE_CLIENT", EasyLogger::info).force_flush()
+  << " [lib_function] fallocate file : " << buf << ", fd : " << file.m_file << ", ret : " << res;
+#endif
   if (res == -1) {
     bool retry;
 
@@ -3969,14 +4338,41 @@ static bool os_file_truncate_posix(const char *pathname, pfs_os_file_t file,
 @return true if success */
 bool os_file_set_eof(FILE *file) /*!< in: file to be truncated */
 {
-  return (!ftruncate(fileno(file), ftell(file)));
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] ftruncate";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
+  int ret = ftruncate(fileno(file), ftell(file));
+  return !ret;
+#else
+//! to remote_fun :
+  int ret = remote_client->remote_ftruncate(fileno(file), ftell(file));
+  char buf[1024];
+  GetPathByFd(fileno(file), buf);
+  EasyLoggerWithTrace("/home/zhangrongrong/LOG_REMOTE_CLIENT", EasyLogger::info).force_flush()
+  << " [lib_function] fallocate file : " << buf << ", fd : " << fileno(file) << ", ret : " << ret;
+  return !ret;
+#endif
+
 }
 
 /** Closes a file handle.
 @param[in]	file		Handle to a file
 @return true if success */
 bool os_file_close_no_error_handling_func(os_file_t file) {
-  return (close(file) != -1);
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] close";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
+  int ret = close(file);
+#else
+//! to remote_fun :
+  int ret =
+  remote_client->remote_close(file);
+  return (-1 != ret);
+#endif
 }
 
 /** This function can be called if one wants to post a batch of reads and
@@ -3990,6 +4386,7 @@ void os_aio_simulated_put_read_threads_to_sleep() { /* No op on non Windows */
 @param[in]	basedir		Start scanning from this directory
 @param[in]      recursive       True if scan should be recursive
 @param[in]	f		Function to call for each entry */
+#ifndef MULTI_MASTER_ZHANG_REMOTE
 void Dir_Walker::walk_posix(const Path &basedir, bool recursive, Function &&f) {
   using Stack = std::stack<Entry>;
 
@@ -4002,6 +4399,9 @@ void Dir_Walker::walk_posix(const Path &basedir, bool recursive, Function &&f) {
 
     directories.pop();
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] opendir, by walk_posix().";
+#endif
     DIR *parent = opendir(current.m_path.c_str());
 
     if (parent == nullptr) {
@@ -4024,6 +4424,9 @@ void Dir_Walker::walk_posix(const Path &basedir, bool recursive, Function &&f) {
         break;
       }
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] readdir : " << dirent->d_name << ", by walk_posix().";
+#endif
       if (strcmp(dirent->d_name, ".") == 0 ||
           strcmp(dirent->d_name, "..") == 0) {
         continue;
@@ -4045,9 +4448,26 @@ void Dir_Walker::walk_posix(const Path &basedir, bool recursive, Function &&f) {
       }
     }
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] closedir : " << current.m_path.c_str() << ", by walk_posix().";
+#endif
     closedir(parent);
   }
 }
+#else
+void Dir_Walker::walk_posix(const Path &basedir, bool recursive, Function &&f){
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] opendir, by walk_posix().";
+#endif
+    std::vector<remote::StructHandle::Entry> entry = remote_client->remote_opendir(basedir, recursive);
+    for(auto iter : entry){
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] readdir : " << iter.m_path << ", by walk_posix().";
+#endif
+        f(iter.m_path, iter.m_depth);
+    }
+}
+#endif
 
 #else /* !_WIN32 */
 
@@ -6725,9 +7145,21 @@ void os_fusionio_get_sector_size() {
     strcat(check_file_name + dir_len, "/check_sector_size");
 
     /* Create a tmp file for checking sector size. */
+
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [create_or_open_path] open : " <<path;
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] open";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     check_file = ::open(check_file_name,
                         O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
-
+#else
+//! to remote_fun :
+    check_file =
+            remote_client->remote_open(check_file_name,
+                        O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
+#endif
     if (check_file == -1) {
       ib::error(ER_IB_MSG_830)
           << "Failed to create check sector file, errno:" << errno
@@ -6755,9 +7187,19 @@ void os_fusionio_get_sector_size() {
     /* The sector size should <= MAX_SECTOR_SIZE. */
     ut_ad(sector_size <= MAX_SECTOR_SIZE);
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] close";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] unlink";
+#endif
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
     close(check_file);
     unlink(check_file_name);
-
+//! to remote_fun :
+#else
+  remote_client->remote_close(check_file);
+  remote_client->remote_unlink(check_file_name);
+#endif
     ut_free(check_file_name);
     ut_free(ptr);
     errno = 0;
@@ -8216,7 +8658,9 @@ void AIO::print_all(FILE *file) {
 @param[in,out]	file		file where to print */
 void os_aio_print(FILE *file) {
   double avg_bytes_read;
-
+#ifdef MULTI_MASTER_ZHANG_LOG
+EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] fprintf";
+#endif
 #ifndef UNIV_HOTBACKUP
   for (ulint i = 0; i < srv_n_file_io_threads; ++i) {
     fprintf(file, "I/O thread %lu state: %s (%s)", (ulong)i,
@@ -8302,6 +8746,9 @@ bool os_aio_all_slots_free() { return (AIO::total_pending_io_count() == 0); }
 /** Prints all pending IO for the array
 @param[in]	file	file where to print */
 void AIO::to_file(FILE *file) const {
+#ifdef MULTI_MASTER_ZHANG_LOG
+EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] fprintf";
+#endif
   acquire();
 
   fprintf(file, " %lu\n", static_cast<ulong>(m_n_reserved));
@@ -8321,6 +8768,9 @@ void AIO::to_file(FILE *file) const {
 
 /** Print pending IOs for all arrays */
 void AIO::print_to_file(FILE *file) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] fprintf";
+#endif
   fprintf(file, "Pending normal aio reads:");
 
   s_reads->to_file(file);
