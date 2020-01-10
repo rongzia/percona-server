@@ -25,3 +25,9 @@ extra/wolfssl-*
 /GPATH
 /GRTAGS
 /GTAGS
+
+**/idea/
+**/cmake-build-debug/
+**/build/
+*.clion.source.upload.marker
+*nohup.out
