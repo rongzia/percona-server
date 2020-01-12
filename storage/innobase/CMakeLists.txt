@@ -239,9 +239,9 @@ MYSQL_ADD_PLUGIN(innobase
   LINK_LIBRARIES
 # START MULTI_MASTER_ZHANG
 # if libevent:
-  ${remote_fun} ${multi_net_io} ${event} pthread
+#  ${remote_fun} ${multi_net_io} ${event} pthread
 # else if grpc:
-# ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY}
+ ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY}
 # END MULTI_MASTER_ZHANG
   sql_dd sql_gis ${ZLIB_LIBRARY} ${LZ4_LIBRARY} ${NUMA_LIBRARY}
   )
