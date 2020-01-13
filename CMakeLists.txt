@@ -1181,7 +1181,7 @@ MYSQL_CHECK_CURL()
 MYSQL_CHECK_RAPIDJSON()
 
 # START MULTI_MASTER_ZHANG
-message("---------------------------- start MULTI_MASTER_ZHANG, line :  "${CMAKE_CURRENT_LIST_LINE})
+message("---------------------------- start MULTI_MASTER_ZHANG, line : " ${CMAKE_CURRENT_LIST_LINE})
 add_definitions(-DMULTI_MASTER_ZHANG_LOG -DMULTI_MASTER_ZHANG_REMOTE)
 INCLUDE_DIRECTORIES(
         ${CMAKE_SOURCE_DIR}/extra/multi_master/include              # for multi_macro.h
