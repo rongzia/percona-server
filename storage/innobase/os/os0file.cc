@@ -39,8 +39,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
  *******************************************************/
 #include "mysys/my_static.h"
 
-
-//#endif
 #include "os0file.h"
 #include "btr0types.h"
 #include "fil0crypt.h"
@@ -1734,20 +1732,20 @@ FILE *os_file_create_tmpfile(const char *path) {
 
     if (fd >= 0) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "close fd : " << fd;
-#endif
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "close fd:" << fd;
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
       close(fd);
 #else
 //! to remote_fun :
       remote_client->remote_close(fd);
-#endif
+#endif // MULTI_MASTER_ZHANG_REMOTE
     }
   }
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "return fileno : " << file->_fileno;
-#endif
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "return fileno:" << file->_fileno;
+#endif // MULTI_MASTER_ZHANG_LOG
   return (file);
 }
 #endif /* !UNIV_HOTBACKUP */
@@ -2320,7 +2318,7 @@ ssize_t SyncFileIO::execute(const IORequest &request) {
 
   if (request.is_read()) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] pread";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] pread fd:" << m_fh << ", size:" << m_n;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
@@ -2375,10 +2373,8 @@ static dberr_t os_file_punch_hole_posix(os_file_t fh, os_offset_t off,
 //! to remote_fun :
   int ret =
   remote_client->remote_fallocate(fh, mode, off, len);
-  char buf[1024];
-  GetPathByFd(fh, buf);
   EasyLoggerWithTrace("/home/zhangrongrong/LOG_REMOTE_CLIENT", EasyLogger::info).force_flush()
-  << " [lib_function] fallocate file : " << buf << ", fd : " << fh << ", ret : " << ret;
+  << " [lib_function] fallocate fd:" << fh << ", ret:" << ret;
 #endif // MULTI_MASTER_ZHANG_REMOTE
 
   if (ret == 0) {
@@ -3149,14 +3145,14 @@ bool AIO::is_linux_native_aio_supported() {
   ut_free(buf);
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] close";
-#endif
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
   close(fd);
 #else
 //! to remote_fun :
   remote_client->remote_close(fd);
-#endif
+#endif // MULTI_MASTER_ZHANG_REMOTE
 
 
   switch (err) {
@@ -3281,14 +3277,14 @@ static int os_file_fsync_posix(os_file_t file) {
 
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] fsync";
-#endif// MULTI_MASTER_ZHANG_LOG
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
     int ret = fsync(file);
 #else
 //! to remote_fun :
     int ret = remote_client->remote_fsync(file);
-#endif
+#endif // MULTI_MASTER_ZHANG_REMOTE
 
     if (ret == 0) {
       return (ret);
@@ -3349,8 +3345,9 @@ static bool os_file_status_posix(const char *path, bool *exists,
   int ret = stat(path, &statinfo);
 #else
 //! to remote_fun :
-  int ret = remote_client->remote_stat(path, &statinfo);
-  errno = 0 - ret - 1;
+  int remote_errno;
+  int ret = remote_client->remote_stat(path, &statinfo, &remote_errno);
+  errno = remote_errno;
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[lib_function] stat:" << path << ", ret:" << ret <<", call by os_file_get_status_posix().";
@@ -3360,6 +3357,7 @@ static bool os_file_status_posix(const char *path, bool *exists,
 
   if (!ret) {
     /* file exists, everything OK */
+
   } else if (errno == ENOENT || errno == ENOTDIR) {
     if (exists != nullptr) {
       *exists = false;
@@ -3369,7 +3367,7 @@ static bool os_file_status_posix(const char *path, bool *exists,
     *type = OS_FILE_TYPE_MISSING;
 #ifdef MULTI_MASTER_ZHANG_LOG
       EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << path << " not exists";
-#endif
+#endif // MULTI_MASTER_ZHANG_LOG
     return (true);
 
   } else if (errno == ENAMETOOLONG) {
@@ -3577,19 +3575,16 @@ bool os_file_set_eof_at_func(os_file_t file, ib_uint64_t new_len) {
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] ftruncate";
 #endif
 #ifndef MULTI_MASTER_ZHANG_REMOTE
-  int ret = ftruncate(file, new_len);
 //! change :
-//  return (!ftruncate(file, new_len));
+  int ret = ftruncate(file, new_len);
 #else
 //! to remote_fun :
   int ret =
   remote_client->remote_ftruncate(file, new_len);
-  char buf[1024];
-  GetPathByFd(file, buf);
   EasyLoggerWithTrace("/home/zhangrongrong/LOG_REMOTE_CLIENT", EasyLogger::info).force_flush()
-  << " [lib_function] fallocate file : " << buf << ", fd : " << file << ", ret : " << ret;
-  return !ret;
+  << " [lib_function] fallocate fd:" << file << ", ret:" << ret;
 #endif
+  return !ret;
 #endif
 }
 
@@ -4172,7 +4167,9 @@ os_file_size_t os_file_get_size(const char *filename) {
   int ret = stat(filename, &s);
 #else
 //! to remote_fun :
-  int ret = remote_client->remote_stat(filename, &s);
+  int remote_errno;
+  int ret = remote_client->remote_stat(filename, &s, &remote_errno);
+  errno = remote_errno;
 #endif
 
   if (ret == 0) {
@@ -4230,11 +4227,12 @@ static dberr_t os_file_get_status_posix(const char *path,
   int ret = stat(path, statinfo);
 #else
 //! to remote_fun :
-  int ret = remote_client->remote_stat(path, statinfo);
-  errno = ret;
+  int remote_errno;
+  int ret = remote_client->remote_stat(path, statinfo, &remote_errno);
+  errno = remote_errno;
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[lib_function] stat : " << path << ", ret:" << ret << ", call by os_file_get_status_posix().";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[lib_function] stat:" << path << ", ret:" << ret << ", call by os_file_get_status_posix().";
 #endif // MULTI_MASTER_ZHANG_LOG
 
   if (ret && (errno == ENOENT || errno == ENOTDIR)) {
@@ -4357,17 +4355,13 @@ bool os_file_set_eof(FILE *file) /*!< in: file to be truncated */
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
   int ret = ftruncate(fileno(file), ftell(file));
-  return !ret;
 #else
 //! to remote_fun :
   int ret = remote_client->remote_ftruncate(fileno(file), ftell(file));
-  char buf[1024];
-  GetPathByFd(fileno(file), buf);
   EasyLoggerWithTrace("/home/zhangrongrong/LOG_REMOTE_CLIENT", EasyLogger::info).force_flush()
-  << " [lib_function] fallocate file : " << buf << ", fd : " << fileno(file) << ", ret : " << ret;
-  return !ret;
+  << " [lib_function] fallocate fd:" << fileno(file) << ", ret:" << ret;
 #endif
-
+  return !ret;
 }
 
 /** Closes a file handle.
@@ -4384,8 +4378,8 @@ bool os_file_close_no_error_handling_func(os_file_t file) {
 //! to remote_fun :
   int ret =
   remote_client->remote_close(file);
-  return (-1 != ret);
 #endif
+  return (-1 != ret);
 }
 
 /** This function can be called if one wants to post a batch of reads and
@@ -7193,7 +7187,17 @@ void os_fusionio_get_sector_size() {
 
     while (sector_size <= MAX_SECTOR_SIZE) {
       block_ptr = static_cast<byte *>(ut_align(ptr, sector_size));
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] pwrite fd:" << check_file << ", size:" << sector_size;
+#endif // MULTI_MASTER_ZHANG_LOG
+#ifndef MULTI_MASTER_ZHANG_REMOTE
+//! change :
       ret = pwrite(check_file, block_ptr, sector_size, 0);
+#else
+//! to remote_fun :
+      ret = remote_client->remote_pwrite(check_file, block_ptr, sector_size, 0);
+#endif // MULTI_MASTER_ZHANG_REMOTE
+
       if (ret > 0 && (ulint)ret == sector_size) {
         break;
       }
@@ -7206,7 +7210,7 @@ void os_fusionio_get_sector_size() {
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] close";
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << " [lib_function] unlink";
-#endif
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef MULTI_MASTER_ZHANG_REMOTE
 //! change :
     close(check_file);
@@ -7215,7 +7219,7 @@ void os_fusionio_get_sector_size() {
 #else
   remote_client->remote_close(check_file);
   remote_client->remote_unlink(check_file_name);
-#endif
+#endif // MULTI_MASTER_ZHANG_REMOTE
     ut_free(check_file_name);
     ut_free(ptr);
     errno = 0;

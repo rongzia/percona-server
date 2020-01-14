@@ -45,6 +45,7 @@ extern uint my_once_extra;
 extern struct st_my_file_info my_file_info_default[MY_NFILE];
 
 
+#include "multi_macro.h"
 #include "easylogger.h"
 #include "remote_client.h"
 #include "handle_net.h"
