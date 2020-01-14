@@ -90,6 +90,8 @@ File my_open(const char *FileName, int Flags, myf MyFlags)
           , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"))
   || 0 == strncmp(FileName, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"
           , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
+          || 0 == strncmp(FileName, "/home/zhangrongrong/mysql/local/mysql80/"
+          , strlen("/home/zhangrongrong/mysql/local/mysql80/"))
   ){
     fd = open(FileName, Flags, my_umask); /* Normal unix */
     local_map.insert(std::make_pair(fd, FileName));
