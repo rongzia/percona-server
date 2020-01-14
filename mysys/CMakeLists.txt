@@ -179,7 +179,7 @@ ADD_CONVENIENCE_LIBRARY(mysys ${MYSYS_SOURCES}
 # if libevent:
 #  ${remote_fun} ${multi_net_io} ${event} pthread
 # else if grpc:
- ${remote_fun} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY}
+  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
 # END MULTI_MASTER_ZHANG
   dbug
   mytime
@@ -208,14 +208,20 @@ IF(SOLARIS_SPARC AND CMAKE_COMPILER_IS_GNUCXX)
 ENDIF()
 
 MYSQL_ADD_EXECUTABLE(thr_lock thr_lock.cc SKIP_INSTALL)
-TARGET_LINK_LIBRARIES(thr_lock mysys)
+TARGET_LINK_LIBRARIES(thr_lock mysys
+  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+ )
 SET_TARGET_PROPERTIES(thr_lock PROPERTIES COMPILE_FLAGS "-DMAIN")
 
 MYSQL_ADD_EXECUTABLE(mf_iocache_test mf_iocache.cc SKIP_INSTALL)
-TARGET_LINK_LIBRARIES(mf_iocache_test mysys)
+TARGET_LINK_LIBRARIES(mf_iocache_test mysys 
+  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+)
 SET_TARGET_PROPERTIES(mf_iocache_test PROPERTIES COMPILE_FLAGS "-DMAIN")
 
 MYSQL_ADD_EXECUTABLE(base64_test base64.cc SKIP_INSTALL)
 SET_TARGET_PROPERTIES(base64_test PROPERTIES COMPILE_FLAGS "-DMAIN")
-TARGET_LINK_LIBRARIES(base64_test mysys)
+TARGET_LINK_LIBRARIES(base64_test mysys 
+  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+)
 ADD_DEPENDENCIES(base64_test GenError)
