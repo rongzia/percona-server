@@ -23,7 +23,8 @@
 /**
   @file mysys/kqueue_timers.cc
 */
-#include "mysys/my_static.h"
+//#include "mysys/my_static.h"
+#include "remote_util.h"
 
 #include <errno.h>
 #include <sys/types.h> /* Must be before <sys/event.h> on FreeBSD. */

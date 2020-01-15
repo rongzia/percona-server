@@ -84,10 +84,13 @@ TARGET_LINK_LIBRARIES(pfs_connect_attr-t ${MYSQLD_STATIC_PLUGIN_LIBS})
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t sql_main binlog rpl master slave)
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t sql_dd sql_gis)
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t mysys
- ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread)
+ ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
+)
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t vio ${SSL_LIBRARIES})
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t strings dbug mysys
- ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread ${ZLIB_LIBRARY})
+ ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
+ ${ZLIB_LIBRARY}
+)
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t mytap perfschema ${ICU_LIBRARIES})
 
 # ADD_EXECUTABLE(pfs_benchmark-t pfs_benchmark-t.cc pfs_benchmark_helper.cc)

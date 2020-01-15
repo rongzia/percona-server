@@ -29,6 +29,7 @@
   @file mysys/mf_tempfile.cc
 */
 #include "mysys/my_static.h"
+#include "remote_util.h"
 
 #include "my_config.h"
 

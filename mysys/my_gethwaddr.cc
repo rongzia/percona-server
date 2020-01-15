@@ -31,6 +31,7 @@
   If there are many available, any non-zero one can be used.
 */
 #include "mysys/my_static.h"
+#include "remote_util.h"
 
 #include "my_config.h"
 

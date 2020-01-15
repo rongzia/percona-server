@@ -37,7 +37,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
  Created 10/21/1995 Heikki Tuuri
  *******************************************************/
-#include "mysys/my_static.h"
+//#include "mysys/my_static.h"
+#include "mysys/remote_util.h"
 
 #include "os0file.h"
 #include "btr0types.h"

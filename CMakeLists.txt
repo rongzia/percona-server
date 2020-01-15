@@ -1210,8 +1210,9 @@ if (REMOTE_FUN_WITH_GRPC STREQUAL "1")
 endif ()
 
 add_subdirectory(extra/multi_master/remote_fun)
-set(remote_fun ${PROJECT_SOURCE_DIR}/build/extra/multi_master/remote_fun/libremote_fun.a)
+set(remote_fun ${PROJECT_BINARY_DIR}/extra/multi_master/remote_fun/libremote_fun.a)
 message("---------------------------- end MULTI_MASTER_ZHANG")
+
 # END MULTI_MASTER_ZHANG
 
 MACRO(MY_INCLUDE_SYSTEM_DIRECTORIES LIBRARY)

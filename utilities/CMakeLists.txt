@@ -21,21 +21,16 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 # Default install component for the files is Server here
+message("building comp_err...")
 SET(MYSQL_INSTALL_COMPONENT Server)
 
-message("building comp_err...")
 IF(NOT CMAKE_CROSSCOMPILING)
-message("PROTOBUF_LIBRARY:" ${PROTOBUF_LIBRARY})
   MYSQL_ADD_EXECUTABLE(comp_err comp_err.cc SKIP_INSTALL)
   TARGET_LINK_LIBRARIES(comp_err
-  mysys
+        mysys
 # START MULTI_MASTER_ZHANG
 # if grpc:
-#  ${remote_fun}
-#  ${remote_fun}
-#  ${PROTOBUF_LIBRARY}
-#  ${GRPC_STATIC_LIBRARY}
-#  ${ZLIB_LIBRARY}
+#  ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
 # END MULTI_MASTER_ZHANG
   )
 ENDIF()
@@ -43,14 +38,21 @@ ENDIF()
 MYSQL_ADD_EXECUTABLE(comp_client_err
   comp_client_err.cc ${CMAKE_SOURCE_DIR}/libmysql/errmsg.cc
   SKIP_INSTALL)
-TARGET_LINK_LIBRARIES(comp_client_err mysys)
-#[[
+TARGET_LINK_LIBRARIES(comp_client_err
+        mysys
+# START MULTI_MASTER_ZHANG
+# if grpc:
+#  ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
+# END MULTI_MASTER_ZHANG
+)
+
+# MULTI_MASTER_ZHANG 注释掉以下命令
 ADD_CUSTOM_COMMAND(OUTPUT ${PROJECT_BINARY_DIR}/include/mysqlclient_ername.h
   COMMAND comp_client_err
   --in_file=${PROJECT_SOURCE_DIR}/include/errmsg.h
   --out_file=${PROJECT_BINARY_DIR}/include/mysqlclient_ername.h
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/comp_client_err.cc)
-]]
+
 ADD_CUSTOM_TARGET(GenClientError
                   ALL
                   DEPENDS ${PROJECT_BINARY_DIR}/include/mysqlclient_ername.h)
@@ -67,20 +69,20 @@ ENDIF()
 
 FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${INSTALL_MYSQLSHAREDIR})
 
-#ADD_CUSTOM_COMMAND(OUTPUT ${PROJECT_BINARY_DIR}/include/mysqld_error.h 
-#                   ${PROJECT_BINARY_DIR}/${INSTALL_MYSQLSHAREDIR}/english/errmsg.sys
-#                   COMMAND comp_err
-#                    --charset=${PROJECT_SOURCE_DIR}/share/charsets
-#                    --out-dir=${PROJECT_BINARY_DIR}/${INSTALL_MYSQLSHAREDIR}/
-#                    --header_file=${PROJECT_BINARY_DIR}/include/mysqld_error.h 
-#                    --name_file=${PROJECT_BINARY_DIR}/include/mysqld_ername.h
-#                    --in_file=${PROJECT_SOURCE_DIR}/share/errmsg-utf8.txt
-#                   DEPENDS ${PROJECT_SOURCE_DIR}/share/errmsg-utf8.txt
-#                   ${CMAKE_CURRENT_SOURCE_DIR}/comp_err.cc)
+ADD_CUSTOM_COMMAND(OUTPUT ${PROJECT_BINARY_DIR}/include/mysqld_error.h
+                   ${PROJECT_BINARY_DIR}/${INSTALL_MYSQLSHAREDIR}/english/errmsg.sys
+                   COMMAND comp_err
+                    --charset=${PROJECT_SOURCE_DIR}/share/charsets
+                    --out-dir=${PROJECT_BINARY_DIR}/${INSTALL_MYSQLSHAREDIR}/
+                    --header_file=${PROJECT_BINARY_DIR}/include/mysqld_error.h
+                    --name_file=${PROJECT_BINARY_DIR}/include/mysqld_ername.h
+                    --in_file=${PROJECT_SOURCE_DIR}/share/errmsg-utf8.txt
+                   DEPENDS ${PROJECT_SOURCE_DIR}/share/errmsg-utf8.txt
+                   ${CMAKE_CURRENT_SOURCE_DIR}/comp_err.cc)
 
 ADD_CUSTOM_TARGET(GenError
                   ALL
-                  DEPENDS 
+                  DEPENDS
                   ${PROJECT_BINARY_DIR}/include/mysqld_error.h
                   ${PROJECT_BINARY_DIR}/${INSTALL_MYSQLSHAREDIR}/english/errmsg.sys
                   ${PROJECT_SOURCE_DIR}/share/errmsg-utf8.txt)

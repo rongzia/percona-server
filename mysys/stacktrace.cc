@@ -29,6 +29,8 @@
   @file mysys/stacktrace.cc
 */
 #include "mysys/my_static.h"
+#include "remote_util.h"
+#include "my_sys.h"
 
 #include "my_config.h"
 

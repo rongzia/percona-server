@@ -923,16 +923,14 @@ IF(NOT DISABLE_SHARED)
 ENDIF()
 
 SET_TARGET_PROPERTIES(mysqld PROPERTIES ENABLE_EXPORTS TRUE)
-
 # END MULTI_MASTER_ZHANG
 TARGET_LINK_LIBRARIES(mysqld
   sql_main sql_gis binlog rpl master slave sql_dd mysys
-  ${PROTOBUF_LIBRARY}
 # START MULTI_MASTER_ZHANG
 # if libevent:
 #  ${remote_fun} ${multi_net_io} ${event} pthread
 # else if grpc:
- ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+  ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} # ${ZLIB_LIBRARY} pthread
 # END MULTI_MASTER_ZHANG
   binlogevents_static ${ICU_LIBRARIES})
 

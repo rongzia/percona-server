@@ -29,6 +29,7 @@
   @file mysys/my_fopen.cc
 */
 #include "mysys/my_static.h"
+#include "remote_util.h"
 
 #include <errno.h>
 #include <fcntl.h>

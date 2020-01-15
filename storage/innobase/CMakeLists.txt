@@ -22,7 +22,7 @@
 
 # This is the CMakeLists for InnoDB
 message("building innobase")
-message("PROJECT_SOURCE_DIR : " ${PROJECT_SOURCE_DIR})
+
 INCLUDE(innodb.cmake)
 
 ADD_DEFINITIONS(-DLOG_SUBSYSTEM_TAG="InnoDB")
@@ -231,7 +231,6 @@ IF(HAVE_LIBNUMA)
   SET(NUMA_LIBRARY "numa")
 ENDIF()
 
-
 MYSQL_ADD_PLUGIN(innobase
   ${INNOBASE_SOURCES} ${INNOBASE_ZIP_DECOMPRESS_SOURCES} STORAGE_ENGINE
   MANDATORY
@@ -241,7 +240,7 @@ MYSQL_ADD_PLUGIN(innobase
 # if libevent:
 #  ${remote_fun} ${multi_net_io} ${event} pthread
 # else if grpc:
- ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+ ${remote_fun} # ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
 # END MULTI_MASTER_ZHANG
   sql_dd sql_gis ${ZLIB_LIBRARY} ${LZ4_LIBRARY} ${NUMA_LIBRARY}
   )

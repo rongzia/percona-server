@@ -355,7 +355,8 @@ ENDFOREACH()
 # with the list of API functions.
 #
 CONFIGURE_FILE(api_test.c.in ${CMAKE_CURRENT_BINARY_DIR}/api_test.c)
-#[[
+# MULTI_MASTER_ZHANG 注释掉一下内容，不生成 libmysql_api_test，也不做测试。多行注释 #[[ ... ]]
+
 #
 # Note: Compiling this test application will fail if not all symbols
 # from @CLIENT_API_FUNCTIONS@ are declared by <mysql.h>. It will fail
@@ -367,9 +368,10 @@ MYSQL_ADD_EXECUTABLE(libmysql_api_test
 SET_TARGET_PROPERTIES(libmysql_api_test PROPERTIES LINKER_LANGUAGE CXX)
 
 IF(LIBRT)
-  message("percona-server/libmysql/CMakeLists.txt : LIBRT")
+#  message("percona-server/libmysql/CMakeLists.txt : LIBRT")
   TARGET_LINK_LIBRARIES(libmysql_api_test ${LIBRT}
- ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread)
+  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+)
 ENDIF()
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
@@ -380,18 +382,19 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 ENDIF()
 
 IF(DISABLE_SHARED)
-  message("percona-server/libmysql/CMakeLists.txt : DISABLE_SHARED")
-  TARGET_LINK_LIBRARIES(libmysql_api_test ${LIBS_TO_MERGE})
+#  message("percona-server/libmysql/CMakeLists.txt : DISABLE_SHARED")
+  TARGET_LINK_LIBRARIES(libmysql_api_test ${LIBS_TO_MERGE}
+  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+          )
 ELSE()
-  message("percona-server/libmysql/CMakeLists.txt : NOT DISABLE_SHARED")
+#  message("percona-server/libmysql/CMakeLists.txt : NOT DISABLE_SHARED")
   TARGET_LINK_LIBRARIES(libmysql_api_test libmysql
- ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
   )
 ENDIF()
 
 # Verify that libmysql_api_test runs OK
-#ADD_CUSTOM_COMMAND(TARGET libmysql_api_test POST_BUILD
-#  COMMAND $<TARGET_FILE:libmysql_api_test>
-#  > ${CMAKE_CURRENT_BINARY_DIR}/libmysql_api_test.out
-#  )
-]]
+ADD_CUSTOM_COMMAND(TARGET libmysql_api_test POST_BUILD
+  COMMAND $<TARGET_FILE:libmysql_api_test>
+  > ${CMAKE_CURRENT_BINARY_DIR}/libmysql_api_test.out
+  )

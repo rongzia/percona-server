@@ -36,6 +36,9 @@ ENDIF()
 INCLUDE_DIRECTORIES(SYSTEM ${BOOST_PATCHES_DIR} ${BOOST_INCLUDE_DIR})
 
 SET(MYSYS_SOURCES
+# START MULTI_MASTER_ZHANG
+#  remote_util.cpp
+# END MULTI_MASTER_ZHANG
   array.cc
   base64.cc
   charset.cc
@@ -175,15 +178,15 @@ ENDIF()
 
 ADD_CONVENIENCE_LIBRARY(mysys ${MYSYS_SOURCES}
   LINK_LIBRARIES
+  dbug
+  mytime
+  strings
 # START MULTI_MASTER_ZHANG
 # if libevent:
 #  ${remote_fun} ${multi_net_io} ${event} pthread
 # else if grpc:
-  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+  ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
 # END MULTI_MASTER_ZHANG
-  dbug
-  mytime
-  strings
   ${ZLIB_LIBRARY}
   ${LIBNSL}
   ${LIBM}
@@ -209,19 +212,19 @@ ENDIF()
 
 MYSQL_ADD_EXECUTABLE(thr_lock thr_lock.cc SKIP_INSTALL)
 TARGET_LINK_LIBRARIES(thr_lock mysys
-  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
- )
+#  ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
+)
 SET_TARGET_PROPERTIES(thr_lock PROPERTIES COMPILE_FLAGS "-DMAIN")
 
 MYSQL_ADD_EXECUTABLE(mf_iocache_test mf_iocache.cc SKIP_INSTALL)
 TARGET_LINK_LIBRARIES(mf_iocache_test mysys 
-  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+#  ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
 )
 SET_TARGET_PROPERTIES(mf_iocache_test PROPERTIES COMPILE_FLAGS "-DMAIN")
 
 MYSQL_ADD_EXECUTABLE(base64_test base64.cc SKIP_INSTALL)
 SET_TARGET_PROPERTIES(base64_test PROPERTIES COMPILE_FLAGS "-DMAIN")
 TARGET_LINK_LIBRARIES(base64_test mysys 
-  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+#  ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
 )
 ADD_DEPENDENCIES(base64_test GenError)
