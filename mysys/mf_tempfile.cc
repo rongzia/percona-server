@@ -159,11 +159,14 @@ File create_temp_file(char *to, const char *dir, const char *prefix,
     /* Explicitly don't use O_EXCL here as it has a different
        meaning with O_TMPFILE.
     */
-#ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create temp file:" << dirname_buf << ", by create_temp_file().";
-#endif // MULTI_MASTER_ZHANG_LOG
+#ifdef MULTI_MASTER_ZHANG_REMOTE
+      if (1) {
+          file = open(dirname_buf, O_RDWR | O_TMPFILE | O_CLOEXEC, S_IRUSR | S_IWUSR);
+          local_map.insert(std::make_pair(file, std::string(dirname_buf)));
+      }
+#else
     file = open(dirname_buf, O_RDWR | O_TMPFILE | O_CLOEXEC, S_IRUSR | S_IWUSR);
-    local_map.insert(std::make_pair(file, std::string(dirname_buf)));
+#endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create temp file:" << dirname_buf << ", fd:" << file << ", by create_temp_file().";
 #endif // MULTI_MASTER_ZHANG_LOG
@@ -210,12 +213,15 @@ File create_temp_file(char *to, const char *dir, const char *prefix,
       DBUG_RETURN(file);
     }
     if (unlink_or_keep == UNLINK_FILE) {
-#ifndef MULTI_MASTER_ZHANG_REMOTE
-//! change :
-      unlink(to);
+#ifdef MULTI_MASTER_ZHANG_REMOTE
+        if (1) {
+            unlink(to);
+        }
+        else {
+            remote_client->remote_unlink(to);
+        }
 #else
-//! to remote_fun :
-      remote_client->remote_unlink(to);
+      unlink(to);
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create_temp_file() unlink file:" << to;

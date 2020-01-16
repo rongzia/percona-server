@@ -126,12 +126,18 @@ static int safe_print_str(const char *addr, int max_len) {
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << buf << ", by safe_print_str().";
 #endif // MULTI_MASTER_ZHANG_LOG
-  fd = open(buf, O_RDONLY);
-  local_map.insert(std::make_pair(fd, buf));
+#ifdef MULTI_MASTER_ZHANG_REMOTE
+  if(1){
+    fd = open(buf, O_RDONLY);
+//    local_map.insert(std::make_pair(fd, buf));
+    if(fd < 0) return -1;
+  }
+#else
+  if ((fd = open(buf, O_RDONLY)) < 0) return -1;
+#endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << buf << ", fd:" << fd << ", by safe_print_str().";
 #endif // MULTI_MASTER_ZHANG_LOG
-  if (fd < 0) return -1;
 
   static_assert(sizeof(off_t) >= sizeof(intptr),
                 "off_t needs to be able to hold a pointer.");
@@ -143,7 +149,7 @@ static int safe_print_str(const char *addr, int max_len) {
   while (total) {
     count = MY_MIN(sizeof(buf), total);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "pread fd:" << fd << ", by safe_print_str()";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to pread fd:" << fd << ", by safe_print_str()";
 #endif // MULTI_MASTER_ZHANG_LOG
     if ((nbytes = pread(fd, buf, count, offset)) < 0) {
       /* Just in case... */
@@ -170,7 +176,7 @@ static int safe_print_str(const char *addr, int max_len) {
 
   if (nbytes == -1) my_safe_printf_stderr("Can't read from address %p\n", addr);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "close fd:" << fd << ", by safe_print_str().";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to close fd:" << fd << ", by safe_print_str().";
 #endif // MULTI_MASTER_ZHANG_LOG
   close(fd);
 

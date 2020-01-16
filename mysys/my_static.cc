@@ -167,9 +167,8 @@ bool my_enable_symlinks = false;
 
 
 
-
+std::string log_path = std::string("/home/zhangrongrong/LOG");
 remote::RemoteClient *remote_client = new remote::RemoteClient("10.11.6.120", "50051", "10002");
-
 int GetPathByFd(int fd, char *buf) {
     char path[1024];
     snprintf(path, 1024, "/proc/%ld/fd/%d", (long) getpid(), fd);
@@ -177,7 +176,6 @@ int GetPathByFd(int fd, char *buf) {
     int ret = readlink(path, buf, 1024);
     return ret;
 }
-
 std::map<int, std::string> local_map;
 std::map<int, std::string> remote_map;
 std::string build_share = std::string("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share");
