@@ -29,7 +29,6 @@
   @file mysys/my_open.cc
 */
 #include "mysys/my_static.h"
-#include "remote_util.h"
 
 #include "my_config.h"
 
@@ -80,27 +79,27 @@ File my_open(const char *FileName, int Flags, myf MyFlags)
   fd = my_win_open(FileName, Flags);
 #else
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << FileName << ", by my_open().";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to create or open file:" << FileName << ", by my_open().";
 #endif // MULTI_MASTER_ZHANG_LOG
-#ifndef MULTI_MASTER_ZHANG_REMOTE
-//! change :
-  fd = open(FileName, Flags, my_umask); /* Normal unix */
-#else
-//! to remote_fun :
-  if(0 == strncmp(FileName, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
-          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"))
-  || 0 == strncmp(FileName, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"
-          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
-          || 0 == strncmp(FileName, "/home/zhangrongrong/mysql/local/mysql80/"
-          , strlen("/home/zhangrongrong/mysql/local/mysql80/"))
-  ){
+#ifdef  MULTI_MASTER_ZHANG_REMOTE
+//  if(0 == strncmp(FileName, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
+//          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"))
+//  || 0 == strncmp(FileName, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"
+//          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
+//          || 0 == strncmp(FileName, "/home/zhangrongrong/mysql/local/mysql80/"
+//          , strlen("/home/zhangrongrong/mysql/local/mysql80/"))
+//  )
+  if(1){
     fd = open(FileName, Flags, my_umask); /* Normal unix */
-    local_map.insert(std::make_pair(fd, FileName));
-  } else {
-      fd =
-              remote_client->remote_open(FileName, Flags, my_umask); /* Normal unix */
-      remote_map.insert(std::make_pair(fd, FileName));
+//    local_map.insert(std::make_pair(fd, FileName));
   }
+//  else {
+//    fd =
+//        remote_client->remote_open(FileName, Flags, my_umask); /* Normal unix */
+//    remote_map.insert(std::make_pair(fd, FileName));
+//  }
+#else
+  fd = open(FileName, Flags, my_umask); /* Normal unix */
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create or open file:" << FileName << ", fd:" << fd << ", by my_open().";
@@ -150,7 +149,7 @@ File my_unix_socket_connect(const char *FileName, myf MyFlags) noexcept
   if (connect(sd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) ==
       -1) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "close fd:" << sd << ", by my_unix_socket_connect().";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to close fd:" << sd << ", by my_unix_socket_connect().";
 #endif // MULTI_MASTER_ZHANG_LOG
     close(sd);
     sd = -1;
@@ -179,18 +178,18 @@ int my_close(File fd, myf MyFlags) {
   mysql_mutex_lock(&THR_LOCK_open);
 #ifndef _WIN32
   do {
-#ifndef MULTI_MASTER_ZHANG_REMOTE
-//! change :
-    err = close(fd);
-#else
-//! to remote_fun :
-    auto iter = local_map.find(fd);
-    if(iter != local_map.end()) {
-        err = close(fd);
-        local_map.erase(fd);
-    } else {
-      err = remote_client->remote_close(fd);
+#ifdef MULTI_MASTER_ZHANG_REMOTE
+//    auto iter = local_map.find(fd);
+//    if(iter != local_map.end()) {
+    if(1) {
+      err = close(fd);
+//        local_map.erase(fd);
     }
+//    else {
+//      err = remote_client->remote_close(fd);
+//    }
+#else
+    err = close(fd);
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "closed fd:" << fd << ", ret:" << err << ", errno:" << errno << ", by my_close().";

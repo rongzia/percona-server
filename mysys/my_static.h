@@ -45,18 +45,18 @@ extern uint my_once_extra;
 extern struct st_my_file_info my_file_info_default[MY_NFILE];
 
 
-#include "multi_macro.h"
-#include "easylogger.h"
-#include "remote_client.h"
-#include "handle_net.h"
-#include "handle_struct.h"
-#include <map>
-extern std::string log_path;
-extern remote::RemoteClient *remote_client;
-extern int GetPathByFd(int fd, char *buf);
-extern std::map<int, std::string> local_map;
-extern std::map<int, std::string> remote_map;
-extern std::string dir_bulgarian;
-extern std::string file_Index;
+//#include "multi_macro.h"
+//#include "easylogger.h"
+//#include "remote_client.h"
+//#include "handle_net.h"
+//#include "handle_struct.h"
+//#include <map>
+//extern std::string log_path;
+//extern remote::RemoteClient *remote_client;
+//extern int GetPathByFd(int fd, char *buf);
+//extern std::map<int, std::string> local_map;
+//extern std::map<int, std::string> remote_map;
+//extern std::string dir_bulgarian;
+//extern std::string file_Index;
 
 #endif /* MYSYS_MY_STATIC_INCLUDED */
