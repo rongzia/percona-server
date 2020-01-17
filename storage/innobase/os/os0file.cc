@@ -2362,7 +2362,7 @@ ssize_t SyncFileIO::execute(const IORequest &request) {
     auto fd_iter = map_remote_fd.find(m_fh);
     if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
       n_bytes = remote_client->remote_pread(m_fh, m_buf, m_n, m_offset);
-      os_thread_sleep(500000);
+//      os_thread_sleep(500000);
     } else {
       n_bytes = pread(m_fh, m_buf, m_n, m_offset);
     }
@@ -2378,7 +2378,7 @@ ssize_t SyncFileIO::execute(const IORequest &request) {
     auto fd_iter = map_remote_fd.find(m_fh);
     if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
       n_bytes = remote_client->remote_pwrite(m_fh, m_buf, m_n, m_offset);
-      os_thread_sleep(500000);
+//      os_thread_sleep(500000);
     } else {
       n_bytes = pwrite(m_fh, m_buf, m_n, m_offset);
     }
@@ -7346,7 +7346,7 @@ void os_fusionio_get_sector_size() {
   auto fd_iter = map_remote_fd.find(check_file);
   if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
       ret = remote_client->remote_pwrite(check_file, block_ptr, sector_size, 0);
-      os_thread_sleep(500000);
+//      os_thread_sleep(500000);
   } else {
       ret = pwrite(check_file, block_ptr, sector_size, 0);
   }
