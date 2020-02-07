@@ -46,6 +46,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 #include "handle_net.h"
 #include "handle_struct.h"
 std::map<int, std::string> map_remote_fd;
+std::map<int, int> map_ibd;
 std::set<std::string> set_remote_path;
 std::set<std::string> set_remote_dir;
 std::string log_path = std::string("/home/zhangrongrong/LOG");
@@ -215,7 +216,10 @@ bool os_is_o_direct_supported() {
         ::open(file_name, O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
   } else {
     file_handle =
+              ::open(file_name, O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
+    int fd =
         remote_client->remote_open(file_name, O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
+      map_ibd.insert(std::make_pair(file_handle, fd));
     map_remote_fd.insert(std::make_pair(file_handle, remote_path));
     set_remote_path.insert(remote_path);
   }
@@ -240,15 +244,18 @@ bool os_is_o_direct_supported() {
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   auto fd_iter = map_remote_fd.find(file_handle);
   if(fd_iter != map_remote_fd.end()) {
-    remote_client->remote_close(file_handle);
+      ::close(file_handle);
+      auto iter = map_ibd.find(file_handle);
+    remote_client->remote_close(iter->second);
     map_remote_fd.erase(file_handle);
+    map_ibd.erase(file_handle);
   } else {
     ::close(file_handle);
   }
 
   auto path_iter = set_remote_path.find(std::string(file_name));
   if(path_iter != set_remote_path.end()){
-    remote_client->remote_unlink(file_name);
+      unlink(file_name);
     set_remote_path.erase(std::string(file_name));
   } else {
     unlink(file_name);
@@ -1624,7 +1631,10 @@ static int os_file_lock(int fd, const char *name) {
   int ret;
   auto fd_iter = map_remote_fd.find(fd);
   if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-    ret = remote_client->remote_fcntl(fd, F_SETLK, &lk);
+      ret = fcntl(fd, F_SETLK, &lk);
+      auto iter = map_ibd.find(fd);
+    //ret =
+    remote_client->remote_fcntl(iter->second, F_SETLK, &lk);
   } else {
     ret = fcntl(fd, F_SETLK, &lk);
   }
@@ -1771,7 +1781,10 @@ FILE *os_file_create_tmpfile(const char *path) {
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   auto remote_iter = map_remote_fd.find(fd);
   if(remote_iter != map_remote_fd.end()) {
-    remote_client->remote_close(fd);
+      close(fd);
+      auto iter = map_ibd.find(fd);
+    remote_client->remote_close(iter->second);
+    map_ibd.erase(fd);
     map_remote_fd.erase(fd);
   } else {
       close(fd);
@@ -2361,7 +2374,10 @@ ssize_t SyncFileIO::execute(const IORequest &request) {
 #ifdef MULTI_MASTER_ZHANG_REMOTE
     auto fd_iter = map_remote_fd.find(m_fh);
     if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-      n_bytes = remote_client->remote_pread(m_fh, m_buf, m_n, m_offset);
+        n_bytes = pread(m_fh, m_buf, m_n, m_offset);
+        auto iter = map_ibd.find(m_fh);
+      //n_bytes =
+      remote_client->remote_pread(iter->second, m_buf, m_n, m_offset);
 //      os_thread_sleep(500000);
     } else {
       n_bytes = pread(m_fh, m_buf, m_n, m_offset);
@@ -2372,12 +2388,16 @@ ssize_t SyncFileIO::execute(const IORequest &request) {
   } else {
     ut_ad(request.is_write());
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to pwrite fd:" << m_fh << ", size:" << m_n;
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to pwrite fd:" << m_fh
+  << ", size:" << m_n << ", offset:" << m_offset;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
     auto fd_iter = map_remote_fd.find(m_fh);
     if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-      n_bytes = remote_client->remote_pwrite(m_fh, m_buf, m_n, m_offset);
+        n_bytes = pwrite(m_fh, m_buf, m_n, m_offset);
+        auto iter = map_ibd.find(m_fh);
+      //n_bytes =
+      remote_client->remote_pwrite(iter->second, m_buf, m_n, m_offset);
 //      os_thread_sleep(500000);
     } else {
       n_bytes = pwrite(m_fh, m_buf, m_n, m_offset);
@@ -2416,7 +2436,10 @@ static dberr_t os_file_punch_hole_posix(os_file_t fh, os_offset_t off,
   int ret;
   auto fd_iter = map_remote_fd.find(fh);
   if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-      ret = remote_client->remote_fallocate(fh, mode, off, len);
+      ret = fallocate(fh, mode, off, len);
+      auto iter = map_ibd.find(fh);
+//      ret =
+      remote_client->remote_fallocate(iter->second, mode, off, len);
   } else {
       ret = fallocate(fh, mode, off, len);
   }
@@ -3315,7 +3338,10 @@ static int os_file_fsync_posix(os_file_t file) {
   int ret;
   auto fd_iter = map_remote_fd.find(file);
   if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-      ret = remote_client->remote_fsync(file);
+      ret = fsync(file);
+      auto iter = map_ibd.find(file);
+//      ret =
+      remote_client->remote_fsync(iter->second);
   } else {
       ret = fsync(file);
   }
@@ -3382,8 +3408,9 @@ static bool os_file_status_posix(const char *path, bool *exists,
   int remote_errno;
   auto path_iter = set_remote_path.find(std::string(path));
   if(path_iter != set_remote_path.end()) {
-    ret = remote_client->remote_stat(path, &statinfo, &remote_errno);
-    errno = remote_errno;
+      ret = stat(path, &statinfo);
+//    ret = remote_client->remote_stat(path, &statinfo, &remote_errno);
+//    errno = remote_errno;
   } else {
     ret = stat(path, &statinfo);
   }
@@ -3559,7 +3586,9 @@ os_file_t os_file_create_simple_func(const char *name, ulint create_mode,
   if(remote_path.find(".ibd") == std::string::npos) {
     file = ::open(name, create_flag | create_o_sync, os_innodb_umask);
   } else {
-    file = remote_client->remote_open(name, create_flag | create_o_sync, os_innodb_umask);
+      file = ::open(name, create_flag | create_o_sync, os_innodb_umask);
+    int fd = remote_client->remote_open(name, create_flag | create_o_sync, os_innodb_umask);
+    map_ibd.insert(std::make_pair(file, fd));
     map_remote_fd.insert(std::make_pair(file, remote_path));
     set_remote_path.insert(remote_path);
   }
@@ -3592,7 +3621,10 @@ os_file_t os_file_create_simple_func(const char *name, ulint create_mode,
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   auto remote_iter = map_remote_fd.find(file);
   if(remote_iter != map_remote_fd.end()) {
-    remote_client->remote_close(file);
+      close(file);
+      auto iter = map_ibd.find(file);
+    remote_client->remote_close(iter->second);
+    map_ibd.erase(file);
     map_remote_fd.erase(file);
   } else {
     close(file);
@@ -3627,7 +3659,10 @@ bool os_file_set_eof_at_func(os_file_t file, ib_uint64_t new_len) {
   int ret;
   auto fd_iter = map_remote_fd.find(file);
   if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-      ret = remote_client->remote_ftruncate(file, new_len);
+      ret = ftruncate(file, new_len);
+      auto iter = map_ibd.find(file);
+//      ret =
+      remote_client->remote_ftruncate(iter->second, new_len);
   } else {
       ret = ftruncate(file, new_len);
   }
@@ -3847,7 +3882,9 @@ pfs_os_file_t os_file_create_func(const char *name, ulint create_mode,
   if(remote_path.find(".ibd") == std::string::npos) {
     file.m_file = ::open(name, create_flag, os_innodb_umask);
   } else {
-    file.m_file = remote_client->remote_open(name, create_flag, os_innodb_umask);
+      file.m_file = ::open(name, create_flag, os_innodb_umask);
+      int fd = remote_client->remote_open(name, create_flag, os_innodb_umask);
+      map_ibd.insert(std::make_pair(file.m_file, fd));
     map_remote_fd.insert(std::make_pair(file.m_file, remote_path));
     set_remote_path.insert(remote_path);
   }
@@ -3916,7 +3953,10 @@ pfs_os_file_t os_file_create_func(const char *name, ulint create_mode,
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   auto remote_iter = map_remote_fd.find(file.m_file);
   if(remote_iter != map_remote_fd.end()) {
-    remote_client->remote_close(file.m_file);
+      close(file.m_file);
+      auto iter = map_ibd.find(file.m_file);
+      remote_client->remote_close(iter->second);
+      map_ibd.erase(file.m_file);
     map_remote_fd.erase(file.m_file);
   } else{
     close(file.m_file);
@@ -3992,7 +4032,9 @@ pfs_os_file_t os_file_create_simple_no_error_handling_func(const char *name,
   if(remote_path.find(".ibd") == std::string::npos) {
     file.m_file = ::open(name, create_flag, os_innodb_umask);
   } else {
-    file.m_file = remote_client->remote_open(name, create_flag, os_innodb_umask);
+      file.m_file = ::open(name, create_flag, os_innodb_umask);
+    int fd = remote_client->remote_open(name, create_flag, os_innodb_umask);
+    map_ibd.insert(std::make_pair(file.m_file, fd));
     map_remote_fd.insert(std::make_pair(file.m_file, remote_path));
     set_remote_path.insert(remote_path);
   }
@@ -4015,7 +4057,10 @@ pfs_os_file_t os_file_create_simple_no_error_handling_func(const char *name,
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   auto remote_iter = map_remote_fd.find(file.m_file);
   if(remote_iter != map_remote_fd.end()) {
-    remote_client->remote_close(file.m_file);
+      close(file.m_file);
+      auto iter = map_ibd.find(file.m_file);
+    remote_client->remote_close(iter->second);
+    map_ibd.erase(file.m_file);
     map_remote_fd.erase(file.m_file);
   } else {
     close(file.m_file);
@@ -4050,7 +4095,9 @@ bool os_file_delete_if_exists_func(const char *name, bool *exist) {
   int ret;
   auto path_iter = set_remote_path.find(std::string(name));
   if(path_iter != set_remote_path.end()) {
-    ret = remote_client->remote_unlink(name);
+      ret = unlink(name);
+    //ret =
+    remote_client->remote_unlink(name);
     set_remote_path.erase(std::string(name));
   } else {
     ret = unlink(name);
@@ -4084,7 +4131,9 @@ bool os_file_delete_func(const char *name) {
   int ret;
   auto path_iter = set_remote_path.find(std::string(name));
   if(path_iter != set_remote_path.end()) {
-    ret = remote_client->remote_unlink(name);
+      ret = unlink(name);
+    //ret =
+    remote_client->remote_unlink(name);
     set_remote_path.erase(std::string(name));
   } else {
     ret = unlink(name);
@@ -4130,7 +4179,9 @@ bool os_file_rename_func(const char *oldpath, const char *newpath) {
   int ret;
   auto path_iter = set_remote_path.find(std::string(oldpath));
   if(path_iter != set_remote_path.end()) {
-    ret = remote_client->remote_rename(oldpath, newpath);
+      ret = rename(oldpath, newpath);
+    //ret =
+    remote_client->remote_rename(oldpath, newpath);
     set_remote_path.erase(std::string(oldpath));
     set_remote_path.insert(std::string(newpath));
   } else {
@@ -4163,7 +4214,11 @@ bool os_file_close_func(os_file_t file) {
   int ret;
   auto remote_iter = map_remote_fd.find(file);
   if(remote_iter != map_remote_fd.end()) {
-    ret = remote_client->remote_close(file);
+      ret = close(file);
+      auto iter = map_ibd.find(file);
+    //ret =
+    remote_client->remote_close(iter->second);
+    map_ibd.erase(file);
     map_remote_fd.erase(file);
   } else {
     ret = close(file);
@@ -4222,17 +4277,23 @@ bool os_file_advise(pfs_os_file_t file, os_offset_t offset, os_offset_t len,
 os_offset_t os_file_get_size(pfs_os_file_t file) {
   /* Store current position */
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to lseek";
+  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to lseek fd:" << file.m_file;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   os_offset_t pos;
   os_offset_t file_size;
   auto fd_iter = map_remote_fd.find(file.m_file);
   if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-    pos = remote_client->remote_lseek(file.m_file, 0, SEEK_CUR);
-    file_size = remote_client->remote_lseek(file.m_file, 0, SEEK_END);
+      pos = lseek(file.m_file, 0, SEEK_CUR);
+      file_size = lseek(file.m_file, 0, SEEK_END);
+      /* Restore current position as the function should not change it */
+      lseek(file.m_file, pos, SEEK_SET);
+
+      auto iter = map_ibd.find(file.m_file);
+    int pos2 = remote_client->remote_lseek(iter->second, 0, SEEK_CUR);
+    int file_size2 = remote_client->remote_lseek(iter->second, 0, SEEK_END);
     /* Restore current position as the function should not change it */
-    remote_client->remote_lseek(file.m_file, pos, SEEK_SET);
+    remote_client->remote_lseek(iter->second, pos2, SEEK_SET);
   } else {
     pos = lseek(file.m_file, 0, SEEK_CUR);
     file_size = lseek(file.m_file, 0, SEEK_END);
@@ -4264,8 +4325,9 @@ os_file_size_t os_file_get_size(const char *filename) {
   int remote_errno;
   auto path_iter = set_remote_path.find(std::string(filename));
   if(path_iter != set_remote_path.end()) {
-    ret = remote_client->remote_stat(filename, &s, &remote_errno);
-    errno = remote_errno;
+      ret = stat(filename, &s);
+//    ret = remote_client->remote_stat(filename, &s, &remote_errno);
+//    errno = remote_errno;
   } else {
     ret = stat(filename, &s);
   }
@@ -4328,8 +4390,9 @@ static dberr_t os_file_get_status_posix(const char *path,
   int remote_errno;
   auto path_iter = set_remote_path.find(std::string(path));
   if(path_iter != set_remote_path.end()) {
-    ret = remote_client->remote_stat(path, statinfo, &remote_errno);
-    errno = remote_errno;
+      ret = stat(path, statinfo);
+//    ret = remote_client->remote_stat(path, statinfo, &remote_errno);
+//    errno = remote_errno;
   } else {
     ret = stat(path, statinfo);
   }
@@ -4387,7 +4450,9 @@ static dberr_t os_file_get_status_posix(const char *path,
   if(remote_path.find(".ibd") == std::string::npos) {
     fh = ::open(path, access, os_innodb_umask);
   } else {
-    fh = remote_client->remote_open(path, access, os_innodb_umask);
+      fh = ::open(path, access, os_innodb_umask);
+    int fd = remote_client->remote_open(path, access, os_innodb_umask);
+    map_ibd.insert(std::make_pair(fh, fd));
     map_remote_fd.insert(std::make_pair(fh, remote_path));
     set_remote_path.insert(remote_path);
   }
@@ -4408,7 +4473,10 @@ static dberr_t os_file_get_status_posix(const char *path,
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   auto remote_iter = map_remote_fd.find(fh);
   if(remote_iter != map_remote_fd.end()) {
-    remote_client->remote_close(fh);
+      close(fh);
+      auto iter = map_ibd.find(fh);
+    remote_client->remote_close(iter->second);
+    map_ibd.erase(fh);
     map_remote_fd.erase(fh);
   }  else {
       close(fh);
@@ -4438,7 +4506,10 @@ static bool os_file_truncate_posix(const char *pathname, pfs_os_file_t file,
   int res;
   auto fd_iter = map_remote_fd.find(file.m_file);
   if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-    res = remote_client->remote_ftruncate(file.m_file, size);
+      res = ftruncate(file.m_file, size);
+      auto iter = map_ibd.find(file.m_file);
+//    res =
+    remote_client->remote_ftruncate(iter->second, size);
   } else {
     res = ftruncate(file.m_file, size);
   }
@@ -4469,7 +4540,10 @@ bool os_file_set_eof(FILE *file) /*!< in: file to be truncated */
   int ret;
   auto fd_iter = map_remote_fd.find(fileno(file));
   if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-    ret = remote_client->remote_ftruncate(fileno(file), ftell(file));
+      ret = ftruncate(fileno(file), ftell(file));
+      auto iter = map_ibd.find(fileno(file));
+    //ret =
+    remote_client->remote_ftruncate(iter->second, ftell(file));
   } else {
     ret = ftruncate(fileno(file), ftell(file));
   }
@@ -4494,7 +4568,11 @@ bool os_file_close_no_error_handling_func(os_file_t file) {
   int ret;
   auto remote_iter = map_remote_fd.find(file);
   if(remote_iter != map_remote_fd.end()) {
-    ret = remote_client->remote_close(file);
+      ret = close(file);
+      auto iter = map_ibd.find(file);
+    //ret =
+    remote_client->remote_close(iter->second);
+    map_ibd.erase(file);
     map_remote_fd.erase(file);
   } else {
     ret = close(file);
@@ -6329,7 +6407,10 @@ bool os_file_set_nocache(int fd MY_ATTRIBUTE((unused)),
   int ret;
   auto fd_iter = map_remote_fd.find(fd);
   if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-    ret = remote_client->remote_fcntl(fd, F_SETFL, O_DIRECT);
+      ret = fcntl(fd, F_SETFL, O_DIRECT);
+      auto iter = map_ibd.find(fd);
+    //ret =
+    remote_client->remote_fcntl(iter->second, F_SETFL, O_DIRECT);
   } else {
     ret = fcntl(fd, F_SETFL, O_DIRECT);
   }
@@ -6528,7 +6609,10 @@ bool os_file_seek(const char *pathname, os_file_t file, os_offset_t offset) {
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   auto fd_iter = map_remote_fd.find(file);
   if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-    ret = remote_client->remote_lseek(file, offset, SEEK_SET);
+      ret = lseek(file, offset, SEEK_SET);
+      auto iter = map_ibd.find(file);
+    //ret =
+    remote_client->remote_lseek(iter->second, offset, SEEK_SET);
   } else {
     ret = lseek(file, offset, SEEK_SET);
   }
@@ -7309,8 +7393,11 @@ void os_fusionio_get_sector_size() {
     check_file = ::open(check_file_name,
                         O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
   } else {
-    check_file = remote_client->remote_open(check_file_name,
+      check_file = ::open(check_file_name,
+                          O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
+    int fd = remote_client->remote_open(check_file_name,
                         O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
+    map_ibd.insert(std::make_pair(check_file, fd));
     map_remote_fd.insert(std::make_pair(check_file, remote_path));
     set_remote_path.insert(remote_path);
   }
@@ -7345,7 +7432,10 @@ void os_fusionio_get_sector_size() {
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   auto fd_iter = map_remote_fd.find(check_file);
   if(fd_iter != map_remote_fd.end() && fd_iter->second.find(".ibd") != std::string::npos) {
-      ret = remote_client->remote_pwrite(check_file, block_ptr, sector_size, 0);
+      ret = pwrite(check_file, block_ptr, sector_size, 0);
+      auto iter = map_ibd.find(check_file);
+      //ret =
+      remote_client->remote_pwrite(iter->second, block_ptr, sector_size, 0);
 //      os_thread_sleep(500000);
   } else {
       ret = pwrite(check_file, block_ptr, sector_size, 0);
@@ -7369,7 +7459,10 @@ void os_fusionio_get_sector_size() {
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   auto remote_iter = map_remote_fd.find(check_file);
   if(remote_iter != map_remote_fd.end()) {
-    remote_client->remote_close(check_file);
+      close(check_file);
+      auto iter = map_ibd.find(check_file);
+    remote_client->remote_close(iter->second);
+    map_ibd.erase(check_file);
     map_remote_fd.erase(check_file);
   } else {
     close(check_file);
