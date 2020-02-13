@@ -48,19 +48,18 @@ int my_delete(const char *name, myf MyFlags) {
   DBUG_ENTER("my_delete");
   DBUG_PRINT("my", ("name %s MyFlags %d", name, MyFlags));
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to unlink file:" << name << ", by my_delete().";
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_delete::unlink. try to unlink file:" << name;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-  if(1){
-    err = unlink(name);
-  }
-//  else {
-//    err = remote_client->remote_unlink(name);
-//  }
+  err = unlink(name);
+  remote_client_mysys->remote_unlink(name);
   if(err == -1){
 #else
   if ((err = unlink(name)) == -1) {
 #endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_delete::unlink. unlink file:" << name << ", ret:" << err;
+#endif // MULTI_MASTER_ZHANG_LOG
     set_my_errno(errno);
     if (MyFlags & (MY_FAE + MY_WME)) {
       char errbuf[MYSYS_STRERROR_SIZE];

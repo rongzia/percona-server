@@ -67,25 +67,24 @@ File my_create(const char *FileName, int CreateFlags, int access_flags,
 #else
 
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to create file:" << FileName  << ", by my_create().";
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_create::open. try to create file:" << FileName;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-  if(1){
-    fd = open(FileName, access_flags | O_CREAT,
-              CreateFlags ? CreateFlags : my_umask);
+  fd = open(FileName, access_flags | O_CREAT,
+            CreateFlags ? CreateFlags : my_umask);
+  if(0 != path_should_be_local(FileName)){
+      int remote_fd = remote_client_mysys->remote_open(FileName, access_flags | O_CREAT,
+            CreateFlags ? CreateFlags : my_umask);
+      map_fd_mysys.insert(std::make_pair(fd, remote_fd));
+      std::string remote_path(FileName);
+      map_path_mysys.insert(std::make_pair(remote_fd, remote_path));
   }
-//  else {
-//    fd =
-//    remote_client->remote_open(FileName, access_flags | O_CREAT,
-//              CreateFlags ? CreateFlags : my_umask);
-//    remote_map.insert(std::make_pair(fd, FileName));
-//  }
 #else
   fd = open(FileName, access_flags | O_CREAT,
             CreateFlags ? CreateFlags : my_umask);
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create file:" << FileName << ", fd:" << fd << ", by my_create().";
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_create::open. create file:" << FileName << ", fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #endif
 

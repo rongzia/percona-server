@@ -28,6 +28,8 @@ this program; if not, write to the Free Software Foundation, Inc.,
  Innodb Clone System
 
  *******************************************************/
+#include "multi_macro.h"
+#include "easylogger.h"
 
 #include "clone0clone.h"
 #include <string>
@@ -2116,6 +2118,9 @@ int Clone_Handle::move_to_next_state(Clone_Task *task, Ha_clone_cbk *callback,
 int Clone_Handle::open_file(Clone_Task *task, Clone_File_Meta *file_meta,
                             ulint file_type, bool create_file,
                             bool set_and_close) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace("/home/zhangrongrong/LOG", EasyLogger::info).force_flush() << "Clone_Handle::open_file()";
+#endif // MULTI_MASTER_ZHANG_LOG
   pfs_os_file_t handle;
   os_file_type_t type;
   ulint option;

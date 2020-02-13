@@ -114,9 +114,14 @@ bool my_gethwaddr(uchar *to) {
   ifc.ifc_req = ifs;
   if (ioctl(fd, SIOCGIFCONF, &ifc) < 0) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "close fd:" << fd << ", by my_gethwaddr().";
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_gethwaddr::close. try to close fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
+#ifdef MULTI_MASTER_ZHANG_REMOTE
     close(fd);
+    close_opened_fd_and_path_mysys(fd);
+#else
+    close(fd);
+#endif // MULTI_MASTER_ZHANG_REMOTE
     return 1;
   }
 
@@ -144,9 +149,14 @@ bool my_gethwaddr(uchar *to) {
     }
   }
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "close fd:" << fd << ", by my_gethwaddr().";
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_gethwaddr::close. try to close fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
+#ifdef MULTI_MASTER_ZHANG_REMOTE
   close(fd);
+  close_opened_fd_and_path_mysys(fd);
+#else
+  close(fd);
+#endif // MULTI_MASTER_ZHANG_REMOTE
   return res;
 }
 

@@ -29,6 +29,8 @@ this program; if not, write to the Free Software Foundation, Inc.,
 
  Created April 08, 2011 Vasil Dimov
  *******************************************************/
+#include "multi_macro.h"
+#include "easylogger.h"
 
 #include <errno.h>
 #include <stdarg.h>
@@ -186,6 +188,9 @@ static const char *get_buf_dump_dir() {
 @param[out]	path		generated path
 @param[in]	path_size	size of 'path', used as in snprintf(3). */
 void buf_dump_generate_path(char *path, size_t path_size) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace("/home/zhangrongrong/LOG", EasyLogger::info).force_flush() << "buf_dump_generate_path()";
+#endif // MULTI_MASTER_ZHANG_LOG
   char buf[FN_REFLEN];
 
   snprintf(buf, sizeof(buf), "%s%c%s", get_buf_dump_dir(), OS_PATH_SEPARATOR,
@@ -244,7 +249,9 @@ static void buf_dump(ibool obey_shutdown) {
   snprintf(tmp_filename, sizeof(tmp_filename), "%s.incomplete", full_filename);
 
   buf_dump_status(STATUS_INFO, "Dumping buffer pool(s) to %s", full_filename);
-
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace("/home/zhangrongrong/LOG", EasyLogger::info).force_flush() << "fopen file:" << tmp_filename << ", call by buf_dump().";
+#endif // MULTI_MASTER_ZHANG_LOG
   f = fopen(tmp_filename, "w");
   if (f == NULL) {
     buf_dump_status(STATUS_ERR, "Cannot open '%s' for writing: %s",
@@ -453,6 +460,9 @@ static void buf_load() {
 
   buf_load_status(STATUS_INFO, "Loading buffer pool(s) from %s", full_filename);
 
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace("/home/zhangrongrong/LOG", EasyLogger::info).force_flush() << "fopen, call by buf_load().";
+#endif // MULTI_MASTER_ZHANG_LOG
   f = fopen(full_filename, "r");
   if (f == NULL) {
     buf_load_status(STATUS_ERR, "Cannot open '%s' for reading: %s",

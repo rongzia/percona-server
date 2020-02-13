@@ -28,6 +28,9 @@ this program; if not, write to the Free Software Foundation, Inc.,
  Innodb Clone Interface
 
  *******************************************************/
+#include "multi_macro.h"
+#include "easylogger.h"
+
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -1445,6 +1448,9 @@ void clone_files_recovery(bool finished) {
 }
 
 dberr_t clone_init() {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace("/home/zhangrongrong/LOG", EasyLogger::info).force_flush() << "clone_init()";
+#endif // MULTI_MASTER_ZHANG_LOG
   /* Check if incomplete cloned data directory */
   os_file_type_t type;
   bool exists = false;

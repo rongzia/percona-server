@@ -93,10 +93,19 @@ size_t my_pread(File Filedes, uchar *Buffer, size_t Count, my_off_t offset,
 #if defined(_WIN32)
     readbytes = my_win_pread(Filedes, Buffer, Count, offset);
 #else
+
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to pread fd:" << Filedes << ", by my_pread()";
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_pread::pread. try to pread fd:" << Filedes;
 #endif // MULTI_MASTER_ZHANG_LOG
+#ifdef MULTI_MASTER_ZHANG_REMOTE
     readbytes = pread(Filedes, Buffer, Count, offset);
+//    int remote_fd = get_remote_fd_mysys(Filedes);
+//    if(remote_fd > 0) {
+//      remote_client->remote_pread(remote_fd, Buffer, Count, offset);
+//    }
+#else
+    readbytes = pread(Filedes, Buffer, Count, offset);
+#endif // MULTI_MASTER_ZHANG_REMOTE
 #endif
     error = (readbytes != Count);
     if (readbytes > 0) total_readbytes += readbytes;
@@ -197,10 +206,18 @@ size_t my_pwrite(File Filedes, const uchar *Buffer, size_t Count,
 #if defined(_WIN32)
     writtenbytes = my_win_pwrite(Filedes, Buffer, Count, offset);
 #else
-    if (mock_pwrite)
+    if (mock_pwrite) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_pwrite()::mock_pwrite";
+#endif // MULTI_MASTER_ZHANG_LOG
       writtenbytes = mock_pwrite(Filedes, Buffer, Count, offset);
-    else
+    }
+    else {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_pwrite()::pwrite";
+#endif // MULTI_MASTER_ZHANG_LOG
       writtenbytes = pwrite(Filedes, Buffer, Count, offset);
+    }
 #endif
     if (writtenbytes == Count) {
       sum_written += writtenbytes;

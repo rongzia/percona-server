@@ -28,6 +28,7 @@
 /**
   @file mysys/my_symlink.cc
 */
+#include "mysys/my_static.h"
 
 #include "my_config.h"
 
@@ -137,6 +138,9 @@ int my_is_symlink(const char *filename, ST_FILE_ID *file_id) {
 */
 
 int my_realpath(char *to, const char *filename, myf MyFlags) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "mysys call my_realpath()";
+#endif // MULTI_MASTER_ZHANG_LOG
 #ifndef _WIN32
   int result = 0;
   DBUG_ENTER("my_realpath");

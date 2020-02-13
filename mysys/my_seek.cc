@@ -93,10 +93,22 @@ my_off_t my_seek(File fd, my_off_t pos, int whence, myf MyFlags) {
 #if defined(_WIN32)
   newpos = my_win_lseek(fd, pos, whence);
 #else
+
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to lseek fd:" << fd << ", by my_seek().";
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_seek::lseel. try to lseek fd:" << fd << ", offset:" << pos;
 #endif // MULTI_MASTER_ZHANG_LOG
+#ifdef MULTI_MASTER_ZHANG_REMOTE
   newpos = lseek(fd, pos, whence);
+  int remote_fd = get_remote_fd_mysys(fd);
+  if(remote_fd > 0) {
+    remote_client_mysys->remote_lseek(remote_fd, pos, whence);
+  }
+#else
+  newpos = lseek(fd, pos, whence);
+#endif // MULTI_MASTER_ZHANG_REMOTE
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_seek::lseel. lseek fd:" << fd << ", to offset:" << newpos;
+#endif // MULTI_MASTER_ZHANG_LOG
 #endif
   if (newpos == (os_off_t)-1) {
     set_my_errno(errno);

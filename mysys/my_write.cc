@@ -28,7 +28,7 @@
 /**
   @file mysys/my_write.cc
 */
-
+#include "my_static.h"
 #include "my_config.h"
 
 #include <errno.h>
@@ -110,10 +110,18 @@ size_t my_write(File Filedes, const uchar *Buffer, size_t Count, myf MyFlags) {
 #ifdef _WIN32
     writtenbytes = my_win_write(Filedes, Buffer, ToWriteCount);
 #else
-    if (mock_write)
+    if (mock_write) {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_write::mock_write, fd:" << Filedes;
+#endif // MULTI_MASTER_ZHANG_LOG
       writtenbytes = mock_write(Filedes, Buffer, ToWriteCount);
-    else
+    }
+    else {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_write::write, fd:" << Filedes;
+#endif // MULTI_MASTER_ZHANG_LOG
       writtenbytes = write(Filedes, Buffer, ToWriteCount);
+    }
 #endif
     DBUG_EXECUTE_IF("simulate_file_write_error", {
       errno = ENOSPC;

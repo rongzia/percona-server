@@ -50,21 +50,19 @@ int my_mkdir(const char *dir, int Flags, myf MyFlags) {
   if (_mkdir(dir))
 #else
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "mkdir:" << dir << ", by my_mkdir().";
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_mkdir::mkdir. " << dir;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-//  if(0 == strncmp(dir, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
-//          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"))
-//  || 0 == strncmp(dir, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"
-//          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
-//  )
-  int ret;
-  if(1){
-    ret = mkdir(dir, Flags & my_umask_dir);
+  int ret = 0;
+  ret = mkdir(dir, Flags & my_umask_dir);
+
+  if(0 != path_should_be_local(dir)){
+    remote_client_mysys->remote_mkdir(dir, Flags & my_umask_dir);
+    set_dir_mysys.insert(std::string(dir));
   }
-//  else {
-//    ret = remote_client->remote_mkdir(dir, Flags & my_umask_dir);
-//  }
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_mkdir::mkdir. " << dir << ", ret:" << ret;
+#endif // MULTI_MASTER_ZHANG_LOG
   if(ret != 0)
 #else
   if (mkdir(dir, Flags & my_umask_dir))

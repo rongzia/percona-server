@@ -130,8 +130,9 @@ int set_crt_report_leaks() {
     @retval true  Error. Couldn't initialize environment
 */
 bool my_init() {
+  remote_client_mysys = new remote::RemoteClient("10.11.6.120", "50051", "null");
   char *str;
-//  remote_client = new remote::RemoteClient("10.11.6.120", "50051", "10002");
+
   if (my_init_done) return false;
 
   my_init_done = true;

@@ -163,17 +163,64 @@ void (*debug_sync_C_callback_ptr)(const char *, size_t);
 bool my_disable_locking = 0;
 bool my_enable_symlinks = false;
 
+//! 每个打开的文件都有一个对应，<local fd, remote fd>, 或者后面直接<remote fd, remote fd>
+std::map<int, int> map_fd_mysys;
+//! 打开的 fd 对应的 path, <remote fd, path> or
+std::map<int, std::string> map_path_mysys;
+//! 新建的目录
+std::set<std::string> set_dir_mysys;
+std::string log_path_mysys = std::string("/home/zhangrongrong/LOG");
 
+remote::RemoteClient *remote_client_mysys = 0;
+int GetPathByFd(int fd, char *buf) {
+    char path[1024];
+    memset(path, 0, 1024);
+    snprintf(path, 1024, "/proc/%ld/fd/%d", (long) getpid(), fd);
+    int ret = readlink(path, buf, 1024);
+    return ret;
+}
+int path_should_be_local(const char *path){
+  if(0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
+          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"))
+  || 0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"
+          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
+  || 0 == strncmp(path, "/home/zhangrongrong/mysql/local/mysql80/"
+          , strlen("/home/zhangrongrong/mysql/local/mysql80/"))
+  ) {
+        return 0;
+  } else {
+      return -1;
+  }
+}
 
-//std::string log_path = std::string("/home/zhangrongrong/LOG");
-//remote::RemoteClient *remote_client = 0; //new remote::RemoteClient("10.11.6.120", "50051", "10002");
-//int GetPathByFd(int fd, char *buf) {
-//    char path[1024];
-//    snprintf(path, 1024, "/proc/%ld/fd/%d", (long) getpid(), fd);
-//
-//    int ret = readlink(path, buf, 1024);
-//    return ret;
-//}
+int get_remote_fd_mysys(int fd){
+  auto iter = map_fd_mysys.find(fd);
+  if(iter != map_fd_mysys.end()){
+    return iter->second;
+  } else {
+    #ifdef MULTI_MASTER_ZHANG_LOG
+      EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "[error] no such file, local fd:" << fd;
+    #endif // MULTI_MASTER_ZHANG_LOG
+    return -1;
+  }
+}
+
+int close_opened_fd_and_path_mysys(int fd) {
+    int remote_fd = get_remote_fd_mysys(fd);
+    if(remote_fd > 0){
+      remote_client_mysys->remote_close(remote_fd);
+      auto iter = map_path_mysys.find(remote_fd);
+      if(iter != map_path_mysys.end()){
+          map_fd_mysys.erase(fd);
+          map_path_mysys.erase(remote_fd);
+      } else {
+        #ifdef MULTI_MASTER_ZHANG_LOG
+          EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "[error] no such file, remote fd:" << remote_fd;
+        #endif // MULTI_MASTER_ZHANG_LOG
+      }
+    }
+    return 0;
+}
 //std::map<int, std::string> local_map;
 //std::map<int, std::string> remote_map;
 //std::string build_share = std::string(

@@ -89,7 +89,7 @@ File create_temp_file(char *to, const char *dir, const char *prefix,
                       int mode MY_ATTRIBUTE((unused)),
                       UnlinkOrKeepFile unlink_or_keep, myf MyFlags) {
 //#ifdef MULTI_MASTER_ZHANG_LOG
-//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "[args] : "
+//  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "[args] : "
 //  << ", to : " << to
 //  << ", dir : " << dir
 //  << ", prefix : " << prefix
@@ -160,15 +160,13 @@ File create_temp_file(char *to, const char *dir, const char *prefix,
        meaning with O_TMPFILE.
     */
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-      if (1) {
-          file = open(dirname_buf, O_RDWR | O_TMPFILE | O_CLOEXEC, S_IRUSR | S_IWUSR);
-//          local_map.insert(std::make_pair(file, std::string(dirname_buf)));
-      }
+//! 临时文件，不需要关闭远程文件
+    file = open(dirname_buf, O_RDWR | O_TMPFILE | O_CLOEXEC, S_IRUSR | S_IWUSR);
 #else
     file = open(dirname_buf, O_RDWR | O_TMPFILE | O_CLOEXEC, S_IRUSR | S_IWUSR);
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create temp file:" << dirname_buf << ", fd:" << file << ", by create_temp_file().";
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "create_temp_file::open. create temp file:" << dirname_buf << ", fd:" << file;
 #endif // MULTI_MASTER_ZHANG_LOG
 
     if (file >= 0) {
@@ -176,7 +174,7 @@ File create_temp_file(char *to, const char *dir, const char *prefix,
       file = my_register_filename(file, to, FILE_BY_O_TMPFILE,
                                   EE_CANTCREATEFILE, MyFlags);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "args[to]:" << to << ", fd:" << file;
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "args[to]:" << to << ", fd:" << file;
 #endif // MULTI_MASTER_ZHANG_LOG
     }
   }
@@ -205,33 +203,26 @@ File create_temp_file(char *to, const char *dir, const char *prefix,
     if (org_file >= 0 && file < 0) {
       int tmp = my_errno();
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create_temp_file() try to close fd:" << org_file;
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "create_temp_file::close. try to close fd:" << org_file;
 #endif // MULTI_MASTER_ZHANG_LOG
+//! 临时文件，不需要关闭远程文件
       close(org_file);
       (void)my_delete(to, MYF(MY_WME));
       set_my_errno(tmp);
       DBUG_RETURN(file);
     }
     if (unlink_or_keep == UNLINK_FILE) {
-#ifdef MULTI_MASTER_ZHANG_REMOTE
-        if (1) {
-            unlink(to);
-        }
-//        else {
-//            remote_client->remote_unlink(to);
-//        }
-#else
+//! 临时文件，不需要关闭远程文件
       unlink(to);
-#endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create_temp_file() unlink file:" << to;
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "create_temp_file::unlink. unlink file:" << to;
 #endif // MULTI_MASTER_ZHANG_LOG
     }
   }
 #endif
   if (file >= 0) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "create_temp_file() return file:" << file;
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "create_temp_file() return file:" << file;
 #endif // MULTI_MASTER_ZHANG_LOG
     mysql_mutex_lock(&THR_LOCK_open);
     my_tmp_file_created++;

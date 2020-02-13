@@ -28,6 +28,8 @@ this program; if not, write to the Free Software Foundation, Inc.,
  Innodb copy snapshot data
 
  *******************************************************/
+#include "multi_macro.h"
+#include "easylogger.h"
 
 #include "buf0dump.h"
 #include "clone0clone.h"
@@ -87,6 +89,9 @@ static int add_page_callback(void *context, byte *buff, uint num_pages) {
 }
 
 int Clone_Snapshot::add_buf_pool_file() {
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace("/home/zhangrongrong/LOG", EasyLogger::info).force_flush() << "add_buf_pool_file()";
+#endif // MULTI_MASTER_ZHANG_LOG
   char path[OS_FILE_MAX_PATH];
   /* Generate the file name. */
   buf_dump_generate_path(path, sizeof(path));
