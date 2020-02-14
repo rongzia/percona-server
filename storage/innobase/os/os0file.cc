@@ -2403,32 +2403,26 @@ ssize_t SyncFileIO::execute(const IORequest &request) {
 //  << ", size:" << m_n << ", offset:" << m_offset;
 //#endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-    char temp_buf[2040000];
-    memset(temp_buf, 0, 2040000);
-    memcpy(temp_buf, m_buf, m_n);
     n_bytes = pwrite(m_fh, m_buf, m_n, m_offset);
     int remote_fd = get_remote_fd(m_fh);
     if(remote_fd > 0) {
-        std::string remote_path = get_opened_path(m_fh);
-        if(remote_path.find("mysql.ibd") != std::string::npos) {
-      remote_client->remote_pwrite(remote_fd, temp_buf, m_n, m_offset);
-          add_mysql_ibd_bytes_count(m_fh, m_n);
+//      remote_client->remote_pwrite(remote_fd, m_buf, m_n, m_offset);
+      std::string remote_path = get_opened_path(m_fh);
+      if(remote_path.find("mysql.ibd") != std::string::npos) {
+          int write_size = remote_client->remote_pwrite2(mysql_ibd_count, remote_fd, m_buf, m_n, m_offset);
+          assert(write_size == m_n);
+          mysql_ibd_bytes_count += m_n;
           mysql_ibd_count += 1;
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "try to pwrite fd:" << m_fh
-  << ", size:" << m_n << ", offset:" << m_offset << ", remote fd:" << remote_fd;
-#endif // MULTI_MASTER_ZHANG_LOG
-#ifdef MULTI_MASTER_ZHANG_LOG
+        EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "no:" << mysql_ibd_count << ", try to pwrite fd:" << m_fh
+          << ", size:" << m_n << ", offset:" << m_offset << ", remote fd:" << remote_fd;
         struct stat stat1;
-//        int ret = fstat(struct_ptr->fd, &stat1);
-        int ret = stat("/home/zhangrongrong/mysql/data/mysql.ibd", &stat1);
+        int ret = fstat(m_fh, &stat1);
         EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush()
         << "size of mysql.ibd:" << stat1.st_size;
 #endif // MULTI_MASTER_ZHANG_LOG
         }
     }
-
-//    os_thread_sleep(10000);
 #else
     n_bytes = pwrite(m_fh, m_buf, m_n, m_offset);
 #endif // MULTI_MASTER_ZHANG_REMOTE
