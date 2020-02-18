@@ -112,13 +112,13 @@ size_t my_write(File Filedes, const uchar *Buffer, size_t Count, myf MyFlags) {
 #else
     if (mock_write) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_write::mock_write, fd:" << Filedes;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_write::mock_write, fd:" << Filedes;
 #endif // MULTI_MASTER_ZHANG_LOG
       writtenbytes = mock_write(Filedes, Buffer, ToWriteCount);
     }
     else {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_write::write, fd:" << Filedes;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_write::write, fd:" << Filedes;
 #endif // MULTI_MASTER_ZHANG_LOG
       writtenbytes = write(Filedes, Buffer, ToWriteCount);
     }

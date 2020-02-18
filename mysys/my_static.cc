@@ -169,7 +169,7 @@ std::map<int, int> map_fd_mysys;
 std::map<int, std::string> map_path_mysys;
 //! 新建的目录
 std::set<std::string> set_dir_mysys;
-std::string log_path_mysys = std::string("/home/zhangrongrong/LOG");
+std::string path_log_mysys = std::string("/home/zhangrongrong/LOG");
 
 remote::RemoteClient *remote_client_mysys = 0;
 int GetPathByFd(int fd, char *buf) {
@@ -199,7 +199,7 @@ int get_remote_fd_mysys(int fd){
     return iter->second;
   } else {
     #ifdef MULTI_MASTER_ZHANG_LOG
-      EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "[error] no such file, local fd:" << fd;
+      EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "[error] no such file, local fd:" << fd;
     #endif // MULTI_MASTER_ZHANG_LOG
     return -1;
   }
@@ -215,7 +215,7 @@ int close_opened_fd_and_path_mysys(int fd) {
           map_path_mysys.erase(remote_fd);
       } else {
         #ifdef MULTI_MASTER_ZHANG_LOG
-          EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "[error] no such file, remote fd:" << remote_fd;
+          EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "[error] no such file, remote fd:" << remote_fd;
         #endif // MULTI_MASTER_ZHANG_LOG
       }
     }

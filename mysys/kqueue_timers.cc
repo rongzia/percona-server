@@ -78,7 +78,7 @@ static void *timer_notify_thread_func(void *arg MY_ATTRIBUTE((unused))) {
   }
 
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_, EasyLogger::info).force_flush() << "timer_notify_thread_func::close. try to close fd:" << kq_fd;
+  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "timer_notify_thread_func::close. try to close fd:" << kq_fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   close(kq_fd);
@@ -131,7 +131,7 @@ int my_timer_initialize(void) {
   if ((rc = start_helper_thread())) {
     my_message_local(ERROR_LEVEL, EE_FAILED_TO_START_TIMER_NOTIFY_THREAD);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_timer_initialize::close. try to close fd:" << kq_fd;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_timer_initialize::close. try to close fd:" << kq_fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
     close(kq_fd);

@@ -50,7 +50,7 @@ int my_mkdir(const char *dir, int Flags, myf MyFlags) {
   if (_mkdir(dir))
 #else
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_mkdir::mkdir. " << dir;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_mkdir::mkdir. " << dir;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int ret = 0;
@@ -61,7 +61,7 @@ int my_mkdir(const char *dir, int Flags, myf MyFlags) {
     set_dir_mysys.insert(std::string(dir));
   }
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_mkdir::mkdir. " << dir << ", ret:" << ret;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_mkdir::mkdir. " << dir << ", ret:" << ret;
 #endif // MULTI_MASTER_ZHANG_LOG
   if(ret != 0)
 #else

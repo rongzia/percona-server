@@ -124,7 +124,7 @@ static int safe_print_str(const char *addr, int max_len) {
   sprintf(buf, "/proc/self/task/%d/mem", tid);
 
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "safe_print_str::open. create or open file:" << buf;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::open. create or open file:" << buf;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
 //! 该函数打开文件，写入错误消息堆栈，正常情况下不会调用，不需要远程
@@ -140,7 +140,7 @@ static int safe_print_str(const char *addr, int max_len) {
   if ((fd = open(buf, O_RDONLY)) < 0) return -1;
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "safe_print_str::open. create or open file:" << buf << ", fd:" << fd;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::open. create or open file:" << buf << ", fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 
   static_assert(sizeof(off_t) >= sizeof(intptr),
@@ -153,7 +153,7 @@ static int safe_print_str(const char *addr, int max_len) {
   while (total) {
     count = MY_MIN(sizeof(buf), total);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "safe_print_str::pread. try to pread fd:" << fd;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::pread. try to pread fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 //! 该函数打开文件，写入错误消息堆栈，正常情况下不会调用，不需要远程
     if ((nbytes = pread(fd, buf, count, offset)) < 0) {
@@ -181,7 +181,7 @@ static int safe_print_str(const char *addr, int max_len) {
 
   if (nbytes == -1) my_safe_printf_stderr("Can't read from address %p\n", addr);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "safe_print_str::close. try to close fd:" << fd;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::close. try to close fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
 //! 该函数打开文件，写入错误消息堆栈，正常情况下不会调用，不需要远程

@@ -80,7 +80,7 @@ File my_open(const char *FileName, int Flags, myf MyFlags)
 #else
 
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_open::open. try to open file:" << FileName;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_open::open. try to open file:" << FileName;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef  MULTI_MASTER_ZHANG_REMOTE
   fd = open(FileName, Flags, my_umask); /* Normal unix */
@@ -94,7 +94,7 @@ File my_open(const char *FileName, int Flags, myf MyFlags)
   fd = open(FileName, Flags, my_umask); /* Normal unix */
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_open::open. open file:" << FileName << ", fd:" << fd;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_open::open. open file:" << FileName << ", fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #endif
 
@@ -141,7 +141,7 @@ File my_unix_socket_connect(const char *FileName, myf MyFlags) noexcept
   if (connect(sd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) ==
       -1) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_unix_socket_connect::close. try to close fd:" << sd;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_unix_socket_connect::close. try to close fd:" << sd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
     close(sd);
@@ -176,7 +176,7 @@ int my_close(File fd, myf MyFlags) {
 #ifndef _WIN32
   do {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_close::clsoe. try to closed fd:" << fd;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_close::clsoe. try to closed fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
     err = close(fd);
@@ -185,7 +185,7 @@ int my_close(File fd, myf MyFlags) {
     err = close(fd);
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "my_close::clsoe. closed fd:" << fd << ", ret:" << err << ", errno:" << errno;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_close::clsoe. closed fd:" << fd << ", ret:" << err << ", errno:" << errno;
 #endif // MULTI_MASTER_ZHANG_LOG
   } while (err == -1 && errno == EINTR);
 #else
@@ -230,7 +230,7 @@ File my_register_filename(File fd, const char *FileName,
                           enum file_type type_of_file,
                           uint error_message_number, myf MyFlags) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "mysys call my_register_filename()";
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "mysys call my_register_filename()";
 #endif // MULTI_MASTER_ZHANG_LOG
   char *dup_filename = NULL;
   DBUG_ENTER("my_register_filename");

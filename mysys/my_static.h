@@ -56,7 +56,7 @@ extern struct st_my_file_info my_file_info_default[MY_NFILE];
 extern std::map<int, std::string> map_path_mysys;
 //! 新建的目录
 extern std::set<std::string> set_dir_mysys;
-extern std::string log_path_mysys;
+extern std::string path_log_mysys;
 extern remote::RemoteClient *remote_client_mysys;
 
 //extern std::map<int, std::string> local_map;
