@@ -2378,31 +2378,18 @@ ssize_t SyncFileIO::execute(const IORequest &request) {
   EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "execute::pread. try to pread fd:" << m_fh << ", size:" << m_n << ", offset:" << m_offset;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-//    unsigned char temp_buf[2048000];
-//    memset(temp_buf, 0, m_n);
-//    int remote_fd = get_remote_fd(m_fh);
-//    if(remote_fd > 0) {
-//        int left_size = m_n;
-//        int read_size = 0;
-//        while (left_size > 524288) {
-//            read_size = remote_client->remote_pread(remote_fd, (unsigned char *) temp_buf + (m_n - left_size), 524288, m_offset + (m_n - left_size));
-//            left_size -= read_size;
-//        }
-//        if (left_size > 0) {
-//            read_size = remote_client->remote_pwrite2(mysql_ibd_count, remote_fd
-//                                                       , (unsigned char *) temp_buf + (m_n - left_size), left_size,
-//                    m_offset + (m_n - left_size));
-//            left_size -= read_size;
-//        }
-//#ifdef MULTI_MASTER_ZHANG_LOG
-//  EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "execute::pread. remote_pread fd:" << m_fh << ", size:" << m_n - left_size << ", offset:" << m_offset;
-//#endif // MULTI_MASTER_ZHANG_LOG
-//    }
-    n_bytes = pread(m_fh, m_buf, m_n, m_offset);
-//    int read_cmp_ret = memcmp(temp_buf, m_buf, m_n);
+//    n_bytes = pread(m_fh, m_buf, m_n, m_offset);
+    int remote_fd = get_remote_fd(m_fh);
+    int read_size = 0;
+//    unsigned char *read_buf = new unsigned char[m_n];
+    if(remote_fd > 0){
+//      read_size = remote_client->remote_pread2(remote_fd, read_buf, m_n, m_offset);
+      n_bytes = remote_client->remote_pread2(remote_fd, m_buf, m_n, m_offset);
+    }
+//    int read_cmp_ret = memcmp(m_buf, read_buf, m_n);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "execute::pread. pread fd:" << m_fh << ", size:" << n_bytes << ", offset:" << m_offset;
 //  EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "execute::pread. read_cmp_ret:" << read_cmp_ret;
+  EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "execute::pread. pread fd:" << m_fh << ", size:" << n_bytes << ", offset:" << m_offset;
 #endif // MULTI_MASTER_ZHANG_LOG
 #else // MULTI_MASTER_ZHANG_REMOTE
     n_bytes = pread(m_fh, m_buf, m_n, m_offset);
@@ -2415,40 +2402,16 @@ ssize_t SyncFileIO::execute(const IORequest &request) {
 #ifdef MULTI_MASTER_ZHANG_REMOTE
     n_bytes = pwrite(m_fh, m_buf, m_n, m_offset);
     int remote_fd = get_remote_fd(m_fh);
+    int write_size = 0;
     if(remote_fd > 0) {
-//          int left_size = m_n;
-//          int write_size = 0;
-//          while(left_size > 524288) {
-//            write_size = remote_client->remote_pwrite(remote_fd
-//                    , (unsigned char *)m_buf + (m_n - left_size), 524288, m_offset + (m_n - left_size));
-//            left_size -= write_size;
-//          }
-//          if(left_size > 0) {
-//            write_size = remote_client->remote_pwrite(remote_fd
-//                    , (unsigned char *)m_buf + (m_n - left_size), left_size, m_offset + (m_n - left_size));
-//            left_size -= write_size;
-//          }
-          int write_size = remote_client->remote_pwrite(remote_fd, m_buf, m_n, m_offset);
-#ifdef MULTI_MASTER_ZHANG_LOG
-        struct stat stat1;
-        int ret = fstat(m_fh, &stat1);
-//        EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "no:" << mysql_ibd_count << ", pwrite fd:" << m_fh
-//          << ", size:" << (m_n - left_size) << ", offset:" << m_offset << ", remote fd:" << remote_fd;
-        EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "pwrite fd:" << m_fh
-          << ", size:" << write_size << ", offset:" << m_offset << ", remote fd:" << remote_fd;
-        EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush()
-        << "size of mysql.ibd:" << stat1.st_size;
-#endif // MULTI_MASTER_ZHANG_LOG
-//          mysql_ibd_bytes_count += m_n;
-//          mysql_ibd_count += 1;
-//        }
+      write_size = remote_client->remote_pwrite(remote_fd, m_buf, m_n, m_offset);
     }
 #else // MULTI_MASTER_ZHANG_REMOTE
     n_bytes = pwrite(m_fh, m_buf, m_n, m_offset);
 #endif // MULTI_MASTER_ZHANG_REMOTE
-//#ifdef MULTI_MASTER_ZHANG_LOG
-//  EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "execute::pwrite. pwrite fd:" << m_fh << ", size:" << n_bytes << ", offset:" << m_offset;
-//#endif // MULTI_MASTER_ZHANG_LOG
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "execute::pwrite. pwrite fd:" << m_fh << ", size:" << write_size << ", offset:" << m_offset;
+#endif // MULTI_MASTER_ZHANG_LOG
   }
 
   return (n_bytes);
