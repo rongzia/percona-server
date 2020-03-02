@@ -83,18 +83,22 @@ File my_open(const char *FileName, int Flags, myf MyFlags)
   EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_open::open. try to open file:" << FileName;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef  MULTI_MASTER_ZHANG_REMOTE
-  fd = open(FileName, Flags, my_umask); /* Normal unix */
-  if(0 != path_should_be_local(FileName)){
-      int remote_fd = remote_client_mysys->remote_open(FileName, Flags, my_umask);
-      map_fd_mysys.insert(std::make_pair(fd, remote_fd));
+  std::string flag;
+  if (0 == path_should_be_local_mysys(FileName)) {
+      fd = open(FileName, Flags, my_umask); /* Normal unix */
+      flag = "local";
+  } else {
+      fd = remote_client_mysys->remote_open(FileName, Flags, my_umask);
+      map_fd_mysys.insert(std::make_pair(fd, fd));
       std::string remote_path(FileName);
-      map_path_mysys.insert(std::make_pair(remote_fd, remote_path));
+      map_path_mysys.insert(std::make_pair(fd, remote_path));
+      flag = "remote";
   }
 #else
   fd = open(FileName, Flags, my_umask); /* Normal unix */
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_open::open. open file:" << FileName << ", fd:" << fd;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_open::open. open " << flag << " file:" << FileName << ", fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #endif
 
@@ -144,8 +148,21 @@ File my_unix_socket_connect(const char *FileName, myf MyFlags) noexcept
   EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_unix_socket_connect::close. try to close fd:" << sd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-    close(sd);
-    close_opened_fd_and_path_mysys(sd);
+  int remote_fd = get_remote_fd_mysys(sd);
+  if (remote_fd > 0) {
+      remote_client_mysys->remote_close(remote_fd);
+      auto iter = map_path_mysys.find(remote_fd);
+      if(iter != map_path_mysys.end()){
+          map_path_mysys.erase(remote_fd);
+      } else {
+        #ifdef MULTI_MASTER_ZHANG_LOG
+          EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "[error] no such file, remote fd:" << remote_fd;
+        #endif // MULTI_MASTER_ZHANG_LOG
+      }
+      map_fd_mysys.erase(remote_fd);
+  } else {
+      close(sd);
+  }
 #else
     close(sd);
 #endif // MULTI_MASTER_ZHANG_REMOTE
@@ -179,8 +196,21 @@ int my_close(File fd, myf MyFlags) {
   EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_close::clsoe. try to closed fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
+  int remote_fd = get_remote_fd_mysys(fd);
+  if (remote_fd > 0) {
+      err = remote_client_mysys->remote_close(remote_fd);
+      auto iter = map_path_mysys.find(remote_fd);
+      if(iter != map_path_mysys.end()){
+          map_path_mysys.erase(remote_fd);
+      } else {
+        #ifdef MULTI_MASTER_ZHANG_LOG
+          EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "[error] no such file, remote fd:" << remote_fd;
+        #endif // MULTI_MASTER_ZHANG_LOG
+      }
+      map_fd_mysys.erase(remote_fd);
+  } else {
     err = close(fd);
-    close_opened_fd_and_path_mysys(fd);
+  }
 #else
     err = close(fd);
 #endif // MULTI_MASTER_ZHANG_REMOTE

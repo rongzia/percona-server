@@ -51,8 +51,11 @@ int my_delete(const char *name, myf MyFlags) {
   EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_delete::unlink. try to unlink file:" << name;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-  err = unlink(name);
-  remote_client_mysys->remote_unlink(name);
+  if (0 == path_should_be_local_mysys(name)) {
+      err = unlink(name);
+  } else {
+      err = remote_client_mysys->remote_unlink(name);
+  }
   if(err == -1){
 #else
   if ((err = unlink(name)) == -1) {

@@ -98,10 +98,11 @@ my_off_t my_seek(File fd, my_off_t pos, int whence, myf MyFlags) {
   EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_seek::lseel. try to lseek fd:" << fd << ", offset:" << pos;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-  newpos = lseek(fd, pos, whence);
   int remote_fd = get_remote_fd_mysys(fd);
   if(remote_fd > 0) {
-    remote_client_mysys->remote_lseek(remote_fd, pos, whence);
+      newpos = remote_client_mysys->remote_lseek(remote_fd, pos, whence);
+  } else {
+      newpos = lseek(fd, pos, whence);
   }
 #else
   newpos = lseek(fd, pos, whence);

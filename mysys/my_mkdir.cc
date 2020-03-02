@@ -54,11 +54,11 @@ int my_mkdir(const char *dir, int Flags, myf MyFlags) {
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int ret = 0;
-  ret = mkdir(dir, Flags & my_umask_dir);
-
-  if(0 != path_should_be_local(dir)){
-    remote_client_mysys->remote_mkdir(dir, Flags & my_umask_dir);
-    set_dir_mysys.insert(std::string(dir));
+  if (0 == path_should_be_local_mysys(dir)) {
+        ret = mkdir(dir, Flags & my_umask_dir);
+  } else {
+        ret = remote_client_mysys->remote_mkdir(dir, Flags & my_umask_dir);
+        set_dir_mysys.insert(std::string(dir));
   }
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_mkdir::mkdir. " << dir << ", ret:" << ret;

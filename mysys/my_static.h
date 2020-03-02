@@ -65,7 +65,8 @@ extern remote::RemoteClient *remote_client_mysys;
 //extern std::string file_Index;
 
 extern int GetPathByFd(int fd, char *buf);
-extern int path_should_be_local(const char *path);
+extern int path_should_be_local_mysys(const char *path);
 extern int get_remote_fd_mysys(int fd);
-extern int close_opened_fd_and_path_mysys(int fd);
+//extern std::string get_opened_path_mysys(int fd);
+//extern int close_opened_fd_and_path_mysys(int fd);
 #endif /* MYSYS_MY_STATIC_INCLUDED */

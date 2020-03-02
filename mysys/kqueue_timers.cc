@@ -81,8 +81,21 @@ static void *timer_notify_thread_func(void *arg MY_ATTRIBUTE((unused))) {
   EasyLoggerWithTrace(log_path_mysys, EasyLogger::info).force_flush() << "timer_notify_thread_func::close. try to close fd:" << kq_fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-  close(kq_fd);
-  close_opened_fd_and_path_mysys(kq_fd);
+  int remote_fd = get_remote_fd_mysys(kq_fd);
+  if (remote_fd > 0) {
+      remote_client_mysys->remote_close(remote_fd);
+      auto iter = map_path_mysys.find(remote_fd);
+      if(iter != map_path_mysys.end()){
+          map_path_mysys.erase(remote_fd);
+      } else {
+        #ifdef MULTI_MASTER_ZHANG_LOG
+          EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "[error] no such file, remote fd:" << remote_fd;
+        #endif // MULTI_MASTER_ZHANG_LOG
+      }
+      map_fd_mysys.erase(remote_fd);
+  } else {
+      close(kq_fd);
+  }
 #else
   close(kq_fd);
 #endif // MULTI_MASTER_ZHANG_REMOTE
@@ -134,8 +147,21 @@ int my_timer_initialize(void) {
   EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_timer_initialize::close. try to close fd:" << kq_fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-    close(kq_fd);
-    close_opened_fd_and_path_mysys(kq_fd);
+  int remote_fd = get_remote_fd_mysys(kq_fd);
+  if (remote_fd > 0) {
+      remote_client_mysys->remote_close(remote_fd);
+      auto iter = map_path_mysys.find(remote_fd);
+      if(iter != map_path_mysys.end()){
+          map_path_mysys.erase(remote_fd);
+      } else {
+        #ifdef MULTI_MASTER_ZHANG_LOG
+          EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "[error] no such file, remote fd:" << remote_fd;
+        #endif // MULTI_MASTER_ZHANG_LOG
+      }
+      map_fd_mysys.erase(remote_fd);
+  } else {
+      close(kq_fd);
+  }
 #else
     close(kq_fd);
 #endif // MULTI_MASTER_ZHANG_REMOTE

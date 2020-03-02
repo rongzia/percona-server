@@ -110,16 +110,13 @@ size_t my_write(File Filedes, const uchar *Buffer, size_t Count, myf MyFlags) {
 #ifdef _WIN32
     writtenbytes = my_win_write(Filedes, Buffer, ToWriteCount);
 #else
-    if (mock_write) {
-#ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_write::mock_write, fd:" << Filedes;
-#endif // MULTI_MASTER_ZHANG_LOG
+    if (mock_write)
       writtenbytes = mock_write(Filedes, Buffer, ToWriteCount);
-    }
     else {
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_write::write, fd:" << Filedes;
 #endif // MULTI_MASTER_ZHANG_LOG
+//! write 多用于写 performance_schema 文件夹下文件，但不限于该文件夹
       writtenbytes = write(Filedes, Buffer, ToWriteCount);
     }
 #endif

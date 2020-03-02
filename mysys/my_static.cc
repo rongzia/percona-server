@@ -172,6 +172,7 @@ std::set<std::string> set_dir_mysys;
 std::string path_log_mysys = std::string("/home/zhangrongrong/LOG");
 
 remote::RemoteClient *remote_client_mysys = 0;
+
 int GetPathByFd(int fd, char *buf) {
     char path[1024];
     memset(path, 0, 1024);
@@ -179,17 +180,37 @@ int GetPathByFd(int fd, char *buf) {
     int ret = readlink(path, buf, 1024);
     return ret;
 }
-int path_should_be_local(const char *path){
+int path_should_be_local_mysys(const char *path){
+  if(std::string(path).find(".ibd") != std::string::npos
+  || 0 == strncmp(path, "./sys"
+          , strlen("./sys"))
+  ) {
+//      return 0;
+      return -1;
+  }
   if(0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
           , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"))
   || 0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"
           , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
-  || 0 == strncmp(path, "/home/zhangrongrong/mysql/local/mysql80/"
-          , strlen("/home/zhangrongrong/mysql/local/mysql80/"))
+  || 0 == strncmp(path, "/home/zhangrongrong/mysql/local/mysql80"
+          , strlen("/home/zhangrongrong/mysql/local/mysql80"))
+//  || 0 == strncmp(path, ""
+//          , strlen(""))
+//  || 0 == strncmp(path, ""
+//          , strlen(""))
+//  || 0 == strncmp(path, ""
+//          , strlen(""))
+//  || 0 == strncmp(path, ""
+//          , strlen(""))
+//  || 0 == strncmp(path, ""
+//          , strlen(""))
+//  || 0 == strncmp(path, ""
+//          , strlen(""))
   ) {
         return 0;
   } else {
-      return -1;
+      return 0;
+//      return -1;
   }
 }
 
@@ -198,31 +219,29 @@ int get_remote_fd_mysys(int fd){
   if(iter != map_fd_mysys.end()){
     return iter->second;
   } else {
-    #ifdef MULTI_MASTER_ZHANG_LOG
-      EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "[error] no such file, local fd:" << fd;
-    #endif // MULTI_MASTER_ZHANG_LOG
     return -1;
   }
 }
 
-int close_opened_fd_and_path_mysys(int fd) {
-    int remote_fd = get_remote_fd_mysys(fd);
-    if(remote_fd > 0){
-      remote_client_mysys->remote_close(remote_fd);
-      auto iter = map_path_mysys.find(remote_fd);
-      if(iter != map_path_mysys.end()){
-          map_fd_mysys.erase(fd);
-          map_path_mysys.erase(remote_fd);
-      } else {
-        #ifdef MULTI_MASTER_ZHANG_LOG
-          EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "[error] no such file, remote fd:" << remote_fd;
-        #endif // MULTI_MASTER_ZHANG_LOG
-      }
-    }
-    return 0;
-}
-//std::map<int, std::string> local_map;
-//std::map<int, std::string> remote_map;
-//std::string build_share = std::string(
-//        "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share");
-//std::string share = std::string("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share");
+//std::string get_opened_path_mysys(int fd){
+//  int remote_fd = get_remote_fd_mysys(fd);
+//  auto iter = map_path_mysys.find(remote_fd);
+//  if(iter != map_path_mysys.end()){
+//    return iter->second;
+//  } else {
+//    return "null";
+//  }
+//}
+
+//int close_opened_fd_and_path_mysys(int remote_fd) {
+//      remote_client_mysys->remote_close(remote_fd);
+//      auto iter = map_path_mysys.find(remote_fd);
+//      if(iter != map_path_mysys.end()){
+//          map_path_mysys.erase(remote_fd);
+//      } else {
+//        #ifdef MULTI_MASTER_ZHANG_LOG
+//          EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "[error] no such file, remote fd:" << remote_fd;
+//        #endif // MULTI_MASTER_ZHANG_LOG
+//      }
+//    return 0;
+//}

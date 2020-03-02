@@ -96,12 +96,13 @@ int my_sync(File fd, myf my_flags) {
   EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_sync::sync. try to fsync fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-    res = fsync(fd);
   int remote_fd = get_remote_fd_mysys(fd);
   if(remote_fd > 0) {
-    remote_client_mysys->remote_fsync(remote_fd);
+    res = remote_client_mysys->remote_fsync(remote_fd);
+  } else {
+    res = fsync(fd);
   }
-#else
+#else // MULTI_MASTER_ZHANG_REMOTE
     res = fsync(fd);
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #elif defined(_WIN32)
