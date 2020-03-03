@@ -83,13 +83,16 @@ File my_create(const char *FileName, int CreateFlags, int access_flags,
       map_path_mysys.insert(std::make_pair(fd, remote_path));
       flag = "remote";
   }
-#else
-  fd = open(FileName, access_flags | O_CREAT,
-            CreateFlags ? CreateFlags : my_umask);
-#endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
   EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_create::open. create " << flag << " file:" << FileName << ", fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
+#else
+  fd = open(FileName, access_flags | O_CREAT,
+            CreateFlags ? CreateFlags : my_umask);
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_create::open. create " << " file:" << FileName << ", fd:" << fd;
+#endif // MULTI_MASTER_ZHANG_LOG
+#endif // MULTI_MASTER_ZHANG_REMOTE
 #endif
 
   if ((MyFlags & MY_SYNC_DIR) && (fd >= 0) &&

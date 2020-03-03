@@ -94,11 +94,14 @@ File my_open(const char *FileName, int Flags, myf MyFlags)
       map_path_mysys.insert(std::make_pair(fd, remote_path));
       flag = "remote";
   }
-#else
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_open::open. open " << flag << " file:" << FileName << ", fd:" << fd;
+#endif // MULTI_MASTER_ZHANG_LOG
+#else // MULTI_MASTER_ZHANG_REMOTE
   fd = open(FileName, Flags, my_umask); /* Normal unix */
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_open::open. open " << flag << " file:" << FileName << ", fd:" << fd;
+  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_open::open. open " << " file:" << FileName << ", fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #endif
 
