@@ -43,7 +43,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 #include "multi_macro.h"
 #include "easylogger.h"
 #include "remote_client.h"
-
+#include "srv0start.h"
 //! 每个打开的文件都有一个对应，<local fd, remote fd>, 或者后面直接<remote fd, remote fd>
 std::map<int, int> map_fd;
 //! 打开的 fd 对应的 path, <remote fd, path> or
@@ -52,7 +52,7 @@ std::map<int, std::string> map_path;
 std::set<std::string> set_dir;
 
 std::string path_log = std::string("/home/zhangrongrong/LOG");
-static remote::RemoteClient *remote_client = 0;
+//static remote::RemoteClient *remote_client = 0;
 
 int get_remote_fd(int fd){
   auto iter = map_fd.find(fd);
@@ -90,8 +90,11 @@ int close_opened_fd_and_path(int fd) {
     return 0;
 }
 
+//! return 0, represents file in local
 int path_should_be_local(const char *path){
   if(std::string(path).find(".ibd") != std::string::npos
+  || 0 == strncmp(path, "./sys"
+          , strlen("./sys"))
   || 0 == strncmp(path, "./sys"
           , strlen("./sys"))
   ) {
@@ -4705,10 +4708,11 @@ void DirWalk(remote::StructHandle::Entry current, bool recursive, std::vector<re
 
 void Dir_Walker::walk_posix(const Path &basedir, bool recursive, Function &&f){
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "try to opendir, by walk_posix().";
+  EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "try to opendir, by walk_posix()." << basedir;
 #endif // MULTI_MASTER_ZHANG_LOG
-    remote::RemoteClient *remote_client2 = new remote::RemoteClient("10.11.6.119", "50051", "10002");
-    std::vector<remote::StructHandle::Entry> remote_entry = remote_client2->remote_opendir(basedir, recursive);
+  //! 该函数在 os0file 线程启动前调用。
+//    remote::RemoteClient *remote_client2 = new remote::RemoteClient("10.11.6.120", "50051", "null");
+    std::vector<remote::StructHandle::Entry> remote_entry = remote_client->remote_opendir(basedir, recursive);
     std::vector<remote::StructHandle::Entry> local_entry;
     DirWalk(remote::StructHandle::Entry(basedir, 0), recursive, &local_entry);
 
@@ -4719,10 +4723,16 @@ void Dir_Walker::walk_posix(const Path &basedir, bool recursive, Function &&f){
     for(auto iter : local_entry) {
         entry.push_back(Entry(iter.m_path, iter.m_depth));
     }
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "walk_posix, path and depth:";
+#endif // MULTI_MASTER_ZHANG_LOG
     for(auto iter : entry){
+#ifdef MULTI_MASTER_ZHANG_LOG
+  EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "walk_posix, " << iter.m_path << ", " << iter.m_depth;
+#endif // MULTI_MASTER_ZHANG_LOG
         f(iter.m_path, iter.m_depth);
     }
-    delete remote_client2;
+//    delete remote_client2;
 }
 #else // MULTI_MASTER_ZHANG_REMOTE
 void Dir_Walker::walk_posix(const Path &basedir, bool recursive, Function &&f) {
@@ -7348,7 +7358,7 @@ bool AIO::start(ulint n_per_seg, ulint n_readers, ulint n_writers,
     srv_use_native_aio = FALSE;
   }
 #endif /* LINUX_NATIVE_AIO */
-remote_client = new remote::RemoteClient("10.11.6.120", "50051", "10002");
+//remote_client = new remote::RemoteClient("10.11.6.120", "50051", "10002");
   srv_reset_io_thread_op_info();
 
   s_reads =

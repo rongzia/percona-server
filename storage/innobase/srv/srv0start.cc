@@ -2023,7 +2023,9 @@ static dberr_t srv_sys_enable_encryption(bool create_new_db) {
 @param[in]	scan_directories	Scan directories for .ibd files for
                                         recovery "dir1;dir2; ... dirN"
 @return DB_SUCCESS or error code */
+remote::RemoteClient *remote_client = 0;
 dberr_t srv_start(bool create_new_db, const std::string &scan_directories) {
+  remote_client = new remote::RemoteClient("10.11.6.120", "50051", "null");
   lsn_t flushed_lsn;
 
   /* just for assertions */

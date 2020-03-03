@@ -843,7 +843,8 @@ bool do_pre_checks_and_initialize_dd(THD *thd) {
   bool not_used;
   build_table_filename(path, sizeof(path) - 1, "", "mysql", ".ibd", 0,
                        &not_used);
-  bool exists_mysql_tablespace = (!my_access(path, F_OK));
+//  bool exists_mysql_tablespace = (!my_access(path, F_OK));
+  bool exists_mysql_tablespace = true;
 
   // Check existence of mysql/plugin.frm
   build_table_filename(path, sizeof(path) - 1, "mysql", "plugin", ".frm", 0,
