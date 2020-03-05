@@ -91,14 +91,15 @@ int close_opened_fd_and_path(int fd) {
 }
 
 //! return 0, represents file in local
-int path_should_be_local(const char *path){
-  if(std::string(path).find(".ibd") != std::string::npos
-  || 0 == strncmp(path, "./sys"
+int file_should_be_local(const char *path){
+  if(0 == strncmp(path, "./sys"
           , strlen("./sys"))
-  || 0 == strncmp(path, "./sys"
-          , strlen("./sys"))
+  || 0 == strncmp(path, "./tpcc"
+          , strlen("./tpcc"))
   ) {
-//      return 0;
+      return -1;
+  }
+  if(std::string(path).find(".ibd") != std::string::npos) {
       return -1;
   }
   if(0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
@@ -107,23 +108,33 @@ int path_should_be_local(const char *path){
           , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
   || 0 == strncmp(path, "/home/zhangrongrong/mysql/local/mysql80"
           , strlen("/home/zhangrongrong/mysql/local/mysql80"))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
   ) {
         return 0;
   } else {
       return 0;
-//      return -1;
+  }
+}
+//! return 0, represents file in local
+int dir_should_be_local(const char *path){
+  if(0 == strncmp(path, "./sys"
+          , strlen("./sys"))
+  || 0 == strncmp(path, "./tpcc"
+          , strlen("./tpcc"))
+  ) {
+      return -1;
+  }
+  if(0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
+          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"))
+  || 0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"
+          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
+  || 0 == strncmp(path, "/home/zhangrongrong/mysql/local/mysql80"
+          , strlen("/home/zhangrongrong/mysql/local/mysql80"))
+  || 0 == strncmp(path, "./#innodb_temp"
+          , strlen("./#innodb_temp"))
+  ) {
+        return 0;
+  } else {
+      return -1;
   }
 }
 
@@ -286,7 +297,7 @@ bool os_is_o_direct_supported() {
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   std::string flag;
-  if(0 == path_should_be_local(file_name)) {
+  if(0 == file_should_be_local(file_name)) {
     file_handle =
       ::open(file_name, O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
       flag = "local";
@@ -335,7 +346,7 @@ bool os_is_o_direct_supported() {
       ::close(file_handle);
   }
 
-  if (0 == path_should_be_local(file_name)) {
+  if (0 == file_should_be_local(file_name)) {
       unlink(file_name);
   } else {
       remote_client->remote_unlink(file_name);
@@ -3465,7 +3476,7 @@ static bool os_file_status_posix(const char *path, bool *exists,
 
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int ret;
-  if (0 == path_should_be_local(path)) {
+  if (0 == file_should_be_local(path)) {
     ret = stat(path, &statinfo);
   } else {
     int remote_errno;
@@ -3641,7 +3652,7 @@ os_file_t os_file_create_simple_func(const char *name, ulint create_mode,
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   std::string flag;
-  if(0 == path_should_be_local(name)) {
+  if(0 == file_should_be_local(name)) {
     file = ::open(name, create_flag | create_o_sync, os_innodb_umask);
       flag = "local";
   } else {
@@ -3756,7 +3767,7 @@ bool os_file_create_directory(const char *pathname, bool fail_if_exists) {
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int rcode;
-  if (0 == path_should_be_local(pathname)) {
+  if (0 == dir_should_be_local(pathname)) {
       rcode = mkdir(pathname, 0770);
   } else {
       rcode = remote_client->remote_mkdir(pathname, 0770);
@@ -3821,7 +3832,7 @@ bool os_file_scan_directory(const char *path, os_dir_cbk_t scan_cbk,
   EasyLoggerWithTrace(path_log, EasyLogger::info).force_flush() << "os_file_scan_directory::rmdir. try to rmdir:" << path;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
-  if (0 == path_should_be_local(path)) {
+  if (0 == file_should_be_local(path)) {
     err = rmdir(path);
   } else {
     err = remote_client->remote_rmdir(path);
@@ -3946,7 +3957,7 @@ pfs_os_file_t os_file_create_func(const char *name, ulint create_mode,
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   std::string flag;
-  if (0 == path_should_be_local(name)) {
+  if (0 == file_should_be_local(name)) {
       file.m_file = ::open(name, create_flag, os_innodb_umask);
       flag = "local";
   } else {
@@ -4104,7 +4115,7 @@ pfs_os_file_t os_file_create_simple_no_error_handling_func(const char *name,
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   std::string flag;
-  if(0 == path_should_be_local(name)) {
+  if(0 == file_should_be_local(name)) {
       file.m_file = ::open(name, create_flag, os_innodb_umask);
       flag = "local";
   } else {
@@ -4177,7 +4188,7 @@ bool os_file_delete_if_exists_func(const char *name, bool *exist) {
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int ret;
-  if (0 == path_should_be_local(name)) {
+  if (0 == file_should_be_local(name)) {
       ret = unlink(name);
   } else {
       ret = remote_client->remote_unlink(name);
@@ -4212,7 +4223,7 @@ bool os_file_delete_func(const char *name) {
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int ret;
-  if (0 == path_should_be_local(name)) {
+  if (0 == file_should_be_local(name)) {
       ret = unlink(name);
   } else {
       ret = remote_client->remote_unlink(name);
@@ -4259,7 +4270,7 @@ bool os_file_rename_func(const char *oldpath, const char *newpath) {
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int ret;
-  if (0 == path_should_be_local(oldpath) || 0 == path_should_be_local(newpath)) {
+  if (0 == file_should_be_local(oldpath) || 0 == file_should_be_local(newpath)) {
       ret = rename(oldpath, newpath);
   } else {
       ret = remote_client->remote_rename(oldpath, newpath);
@@ -4402,7 +4413,7 @@ os_file_size_t os_file_get_size(const char *filename) {
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int ret;
-  if (0 == path_should_be_local(filename)) {
+  if (0 == file_should_be_local(filename)) {
     ret = stat(filename, &s);
   } else {
     int remote_errno;
@@ -4465,7 +4476,7 @@ static dberr_t os_file_get_status_posix(const char *path,
                                         bool check_rw_perm, bool read_only) {
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int ret;
-  if (0 == path_should_be_local(path)) {
+  if (0 == file_should_be_local(path)) {
     ret = stat(path, statinfo);
   } else {
     int remote_errno;
@@ -4523,7 +4534,7 @@ static dberr_t os_file_get_status_posix(const char *path,
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   std::string flag;
   int fh;
-  if(0 == path_should_be_local(path)) {
+  if(0 == file_should_be_local(path)) {
       fh = ::open(path, access, os_innodb_umask);
       flag = "local";
   } else {
@@ -7537,7 +7548,7 @@ void os_fusionio_get_sector_size() {
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   std::string flag;
-  if(0 == path_should_be_local(check_file_name)) {
+  if(0 == file_should_be_local(check_file_name)) {
       check_file = ::open(check_file_name, O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT, S_IRWXU);
       flag = "local";
   } else {
@@ -7621,7 +7632,7 @@ void os_fusionio_get_sector_size() {
     close(check_file);
   }
 
-  if (0 == path_should_be_local(check_file_name)) {
+  if (0 == file_should_be_local(check_file_name)) {
       ret = unlink(check_file_name);
   } else {
       ret = remote_client->remote_unlink(check_file_name);

@@ -180,12 +180,35 @@ int GetPathByFd(int fd, char *buf) {
     int ret = readlink(path, buf, 1024);
     return ret;
 }
-int path_should_be_local_mysys(const char *path){
-  if(std::string(path).find(".ibd") != std::string::npos
-  || 0 == strncmp(path, "./sys"
+//! return 0, represents file in local
+int file_should_be_local_mysys(const char *path){
+  if(0 == strncmp(path, "./sys"
           , strlen("./sys"))
   ) {
+      return -1;
+  }
+  if(std::string(path).find(".ibd") != std::string::npos
+  ) {
+      return -1;
 //      return 0;
+  }
+  if(0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
+          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"))
+  || 0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"
+          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
+  || 0 == strncmp(path, "/home/zhangrongrong/mysql/local/mysql80"
+          , strlen("/home/zhangrongrong/mysql/local/mysql80"))
+  ) {
+        return 0;
+  } else {
+      return 0;
+  }
+}
+//! return 0, represents file in local
+int dir_should_be_local_mysys(const char *path){
+  if(0 == strncmp(path, "./sys"
+          , strlen("./sys"))
+  ) {
       return -1;
   }
   if(0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
@@ -194,23 +217,15 @@ int path_should_be_local_mysys(const char *path){
           , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
   || 0 == strncmp(path, "/home/zhangrongrong/mysql/local/mysql80"
           , strlen("/home/zhangrongrong/mysql/local/mysql80"))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
-//  || 0 == strncmp(path, ""
-//          , strlen(""))
+  || 0 == strncmp(path, "./performance_schema"
+          , strlen("./performance_schema"))
+  || 0 == strncmp(path, "./mysql"
+          , strlen("./mysql"))
   ) {
         return 0;
   } else {
-      return 0;
-//      return -1;
+      return -1;
+//      return 0;
   }
 }
 

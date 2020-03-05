@@ -59,7 +59,7 @@ int my_rename(const char *from, const char *to, myf MyFlags) {
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int ret;
-  if(0 == path_should_be_local_mysys(from) || 0 == path_should_be_local_mysys(to)) {
+  if(0 == file_should_be_local_mysys(from) || 0 == file_should_be_local_mysys(to)) {
     ret = rename(from, to);
   } else {
     ret = remote_client_mysys->remote_rename(from, to);

@@ -54,7 +54,7 @@ int my_mkdir(const char *dir, int Flags, myf MyFlags) {
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int ret = 0;
-  if (0 == path_should_be_local_mysys(dir)) {
+  if (0 == dir_should_be_local_mysys(dir)) {
         ret = mkdir(dir, Flags & my_umask_dir);
   } else {
         ret = remote_client_mysys->remote_mkdir(dir, Flags & my_umask_dir);

@@ -84,7 +84,7 @@ File my_open(const char *FileName, int Flags, myf MyFlags)
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef  MULTI_MASTER_ZHANG_REMOTE
   std::string flag;
-  if (0 == path_should_be_local_mysys(FileName)) {
+  if (0 == file_should_be_local_mysys(FileName)) {
       fd = open(FileName, Flags, my_umask); /* Normal unix */
       flag = "local";
   } else {
