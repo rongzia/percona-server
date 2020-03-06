@@ -13,3 +13,7 @@
 [submodule "storage/rocksdb/rocksdb"]
 	path = storage/rocksdb/rocksdb
 	url = https://github.com/PokemonWei/rocksdb.git
+[submodule "extra/multi_master/remote_fun"]
+	path = extra/multi_master/remote_fun
+	url = git@github.com:rongzia/remote_fun.git
+	branch = grpc
