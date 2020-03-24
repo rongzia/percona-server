@@ -931,7 +931,7 @@ TARGET_LINK_LIBRARIES(mysqld
 # if libevent:
 #  ${remote_fun} ${multi_net_io} ${event} pthread
 # else if grpc:
-  ${remote_fun} # ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} # ${ZLIB_LIBRARY} pthread
+  ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} # ${ZLIB_LIBRARY} pthread
 # END MULTI_MASTER_ZHANG
   binlogevents_static ${ICU_LIBRARIES})
 
