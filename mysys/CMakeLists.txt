@@ -19,7 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
+# START MULTI_MASTER_ZHANG
 message("building mysys")
+# END MULTI_MASTER_ZHANG
 
 SET(MY_TIME_SOURCES my_time.cc my_systime.cc)
 

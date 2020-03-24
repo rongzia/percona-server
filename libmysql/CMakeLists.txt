@@ -355,7 +355,7 @@ ENDFOREACH()
 # with the list of API functions.
 #
 CONFIGURE_FILE(api_test.c.in ${CMAKE_CURRENT_BINARY_DIR}/api_test.c)
-# MULTI_MASTER_ZHANG 注释掉一下内容，不生成 libmysql_api_test，也不做测试。多行注释 #[[ ... ]]
+# MULTI_MASTER_ZHANG 注释掉以下内容，不生成 libmysql_api_test，也不做测试。多行注释 #[[ ... ]]
 
 #
 # Note: Compiling this test application will fail if not all symbols
@@ -370,7 +370,9 @@ SET_TARGET_PROPERTIES(libmysql_api_test PROPERTIES LINKER_LANGUAGE CXX)
 IF(LIBRT)
 #  message("percona-server/libmysql/CMakeLists.txt : LIBRT")
   TARGET_LINK_LIBRARIES(libmysql_api_test ${LIBRT}
-  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+# START MULTI_MASTER_ZHANG
+#  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+# END MULTI_MASTER_ZHANG
 )
 ENDIF()
 
@@ -382,14 +384,22 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 ENDIF()
 
 IF(DISABLE_SHARED)
+# START MULTI_MASTER_ZHANG
 #  message("percona-server/libmysql/CMakeLists.txt : DISABLE_SHARED")
+# END MULTI_MASTER_ZHANG
   TARGET_LINK_LIBRARIES(libmysql_api_test ${LIBS_TO_MERGE}
-  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
-          )
+# START MULTI_MASTER_ZHANG
+#  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+# END MULTI_MASTER_ZHANG
+)
 ELSE()
+# START MULTI_MASTER_ZHANG
 #  message("percona-server/libmysql/CMakeLists.txt : NOT DISABLE_SHARED")
+# END MULTI_MASTER_ZHANG
   TARGET_LINK_LIBRARIES(libmysql_api_test libmysql
-  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+# START MULTI_MASTER_ZHANG
+#  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread
+# END MULTI_MASTER_ZHANG
   )
 ENDIF()
 

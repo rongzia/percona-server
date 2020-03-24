@@ -84,11 +84,15 @@ TARGET_LINK_LIBRARIES(pfs_connect_attr-t ${MYSQLD_STATIC_PLUGIN_LIBS})
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t sql_main binlog rpl master slave)
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t sql_dd sql_gis)
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t mysys
- ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
+# START MULTI_MASTER_ZHANG
+ # ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
+# END MULTI_MASTER_ZHANG
 )
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t vio ${SSL_LIBRARIES})
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t strings dbug mysys
- ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
+# START MULTI_MASTER_ZHANG
+ # ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
+# END MULTI_MASTER_ZHANG
  ${ZLIB_LIBRARY}
 )
 TARGET_LINK_LIBRARIES(pfs_connect_attr-t mytap perfschema ${ICU_LIBRARIES})

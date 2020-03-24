@@ -21,13 +21,14 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 # Default install component for the files is Server here
+# START MULTI_MASTER_ZHANG
 message("building comp_err...")
+# END MULTI_MASTER_ZHANG
 SET(MYSQL_INSTALL_COMPONENT Server)
 
 IF(NOT CMAKE_CROSSCOMPILING)
   MYSQL_ADD_EXECUTABLE(comp_err comp_err.cc SKIP_INSTALL)
-  TARGET_LINK_LIBRARIES(comp_err
-        mysys
+  TARGET_LINK_LIBRARIES(comp_err mysys
 # START MULTI_MASTER_ZHANG
 # if grpc:
 #  ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
@@ -38,8 +39,7 @@ ENDIF()
 MYSQL_ADD_EXECUTABLE(comp_client_err
   comp_client_err.cc ${CMAKE_SOURCE_DIR}/libmysql/errmsg.cc
   SKIP_INSTALL)
-TARGET_LINK_LIBRARIES(comp_client_err
-        mysys
+TARGET_LINK_LIBRARIES(comp_client_err  mysys
 # START MULTI_MASTER_ZHANG
 # if grpc:
 #  ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread

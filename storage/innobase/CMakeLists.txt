@@ -21,7 +21,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 # This is the CMakeLists for InnoDB
+# START MULTI_MASTER_ZHANG
 message("building innobase")
+# END MULTI_MASTER_ZHANG
 
 INCLUDE(innodb.cmake)
 
