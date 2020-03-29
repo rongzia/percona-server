@@ -41,7 +41,8 @@ this program; if not, write to the Free Software Foundation, Inc.,
 *****************************************************************************/
 
 /** @file ha_innodb.cc */
-//#include "mysys/my_static.h"
+//#include "multi_macro.h"
+//#include "easylogger.h"
 
 #ifndef UNIV_HOTBACKUP
 #include "my_config.h"
@@ -2520,7 +2521,7 @@ path. If the path is NULL, then it will be created in --tmpdir.
 @return temporary file descriptor, or < 0 on error */
 int innobase_mysql_tmpfile(const char *path) {
 //#ifdef MULTI_MASTER_ZHANG_LOG
-//  EasyLoggerWithTrace(log_path, EasyLogger::info).force_flush() << "innobase_mysql_tmpfile(), path : " << path
+//  EasyLoggerWithTrace("/home/zhangrongrong/LOG", EasyLogger::info).force_flush() << "innobase_mysql_tmpfile(), path : " << path
 //  << "invoke sql_thd_api.cc::mysql_tmpfile[_path]()";;
 //#endif // MULTI_MASTER_ZHANG_LOG
   int fd2 = -1;

@@ -48,7 +48,7 @@ int my_delete(const char *name, myf MyFlags) {
   DBUG_ENTER("my_delete");
   DBUG_PRINT("my", ("name %s MyFlags %d", name, MyFlags));
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_delete::unlink. try to unlink file:" << name;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_delete::unlink. try to unlink file:" << name;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   if (0 == file_should_be_local_mysys(name)) {
@@ -61,7 +61,7 @@ int my_delete(const char *name, myf MyFlags) {
   if ((err = unlink(name)) == -1) {
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_delete::unlink. unlink file:" << name << ", ret:" << err;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_delete::unlink. unlink file:" << name << ", ret:" << err;
 #endif // MULTI_MASTER_ZHANG_LOG
     set_my_errno(errno);
     if (MyFlags & (MY_FAE + MY_WME)) {

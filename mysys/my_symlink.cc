@@ -139,7 +139,7 @@ int my_is_symlink(const char *filename, ST_FILE_ID *file_id) {
 
 int my_realpath(char *to, const char *filename, myf MyFlags) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "mysys call my_realpath()";
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "mysys call my_realpath()";
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifndef _WIN32
   int result = 0;

@@ -242,7 +242,7 @@ MYSQL_ADD_PLUGIN(innobase
 # if libevent:
 #  ${remote_fun} ${multi_net_io} ${event} pthread
 # else if grpc:
- ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
+  ${remote_fun} ${GRPC_STATIC_LIBRARY} ${PROTOBUF_LIBRARY} ${ZLIB_LIBRARY} pthread
 # END MULTI_MASTER_ZHANG
   sql_dd sql_gis ${ZLIB_LIBRARY} ${LZ4_LIBRARY} ${NUMA_LIBRARY}
   )

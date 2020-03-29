@@ -95,7 +95,7 @@ size_t my_pread(File Filedes, uchar *Buffer, size_t Count, my_off_t offset,
 #else
 
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_pread::pread. try to pread fd:" << Filedes;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_pread::pread. try to pread fd:" << Filedes;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
     int remote_fd = get_remote_fd_mysys(Filedes);
@@ -209,13 +209,13 @@ size_t my_pwrite(File Filedes, const uchar *Buffer, size_t Count,
 #else
     if (mock_pwrite) {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_pwrite()::mock_pwrite";
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_pwrite()::mock_pwrite";
 #endif // MULTI_MASTER_ZHANG_LOG
       writtenbytes = mock_pwrite(Filedes, Buffer, Count, offset);
     }
     else {
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_pwrite()::pwrite";
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_pwrite()::pwrite";
 #endif // MULTI_MASTER_ZHANG_LOG
 //! 类似 my_write
       int remote_fd = get_remote_fd_mysys(Filedes);

@@ -76,7 +76,7 @@ FILE *my_fopen(const char *filename, int flags, myf MyFlags) {
 #else
   fd = fopen(filename, type);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_fopen::fopen. create or open file:" << filename << ", fd:" << fd->_fileno;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_fopen::fopen. create or open file:" << filename << ", fd:" << fd->_fileno;
 #endif // MULTI_MASTER_ZHANG_LOG
 #endif
   if (fd != 0) {
@@ -182,7 +182,7 @@ FILE *my_freopen(const char *path, const char *mode, FILE *stream) {
 #else
   result = freopen(path, mode, stream);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_freopen::freopen. create or open file:" << path << ", fd:" << result->_fileno;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_freopen::freopen. create or open file:" << path << ", fd:" << result->_fileno;
 #endif // MULTI_MASTER_ZHANG_LOG
 #endif
 
@@ -234,7 +234,7 @@ FILE *my_fdopen(File Filedes, const char *name, int Flags, myf MyFlags) {
 #else
   fd = fdopen(Filedes, type);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_fdopen::fdopen. open fd:" << fd;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_fdopen::fdopen. open fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #endif
   if (!fd) {

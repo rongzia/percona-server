@@ -67,7 +67,7 @@ File my_create(const char *FileName, int CreateFlags, int access_flags,
 #else
 
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_create::open. try to create file:" << FileName;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_create::open. try to create file:" << FileName;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   std::string flag;
@@ -84,13 +84,13 @@ File my_create(const char *FileName, int CreateFlags, int access_flags,
       flag = "remote";
   }
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_create::open. create " << flag << " file:" << FileName << ", fd:" << fd;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_create::open. create " << flag << " file:" << FileName << ", fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #else
   fd = open(FileName, access_flags | O_CREAT,
             CreateFlags ? CreateFlags : my_umask);
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_create::open. create " << " file:" << FileName << ", fd:" << fd;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_create::open. create " << " file:" << FileName << ", fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #endif

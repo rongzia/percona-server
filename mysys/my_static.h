@@ -44,25 +44,21 @@ extern uint my_once_extra;
 
 extern struct st_my_file_info my_file_info_default[MY_NFILE];
 
+#include "multi_macro.h"
+#ifdef MULTI_MASTER_ZHANG_REMOTE
 #include <string.h>
 #include <map>
 #include <set>
-#include "multi_macro.h"
 #include "easylogger.h"
 #include "remote_client.h"
 //! 每个打开的文件都有一个对应，<local fd, remote fd>, 或者后面直接<remote fd, remote fd>
-    extern std::map<int, int> map_fd_mysys;
+extern std::map<int, int> map_fd_mysys;
 //! 打开的 fd 对应的 path, <remote fd, path> or
 extern std::map<int, std::string> map_path_mysys;
 //! 新建的目录
 extern std::set<std::string> set_dir_mysys;
-extern std::string path_log_mysys;
+//extern std::string multi_master::path_log_mysys;
 extern remote::RemoteClient *remote_client_mysys;
-
-//extern std::map<int, std::string> local_map;
-//extern std::map<int, std::string> remote_map;
-//extern std::string dir_bulgarian;
-//extern std::string file_Index;
 
 extern int GetPathByFd(int fd, char *buf);
 extern int file_should_be_local_mysys(const char *path);
@@ -70,4 +66,6 @@ extern int dir_should_be_local_mysys(const char *path);
 extern int get_remote_fd_mysys(int fd);
 //extern std::string get_opened_path_mysys(int fd);
 //extern int close_opened_fd_and_path_mysys(int fd);
+#endif //! MULTI_MASTER_ZHANG_REMOTE
+
 #endif /* MYSYS_MY_STATIC_INCLUDED */

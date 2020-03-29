@@ -163,13 +163,14 @@ void (*debug_sync_C_callback_ptr)(const char *, size_t);
 bool my_disable_locking = 0;
 bool my_enable_symlinks = false;
 
+#ifdef MULTI_MASTER_ZHANG_REMOTE
 //! 每个打开的文件都有一个对应，<local fd, remote fd>, 或者后面直接<remote fd, remote fd>
 std::map<int, int> map_fd_mysys;
 //! 打开的 fd 对应的 path, <remote fd, path> or
 std::map<int, std::string> map_path_mysys;
 //! 新建的目录
 std::set<std::string> set_dir_mysys;
-std::string path_log_mysys = std::string("/home/zhangrongrong/LOG");
+//std::string multi_master::path_log_mysys = std::string("/home/zhangrongrong/LOG");
 
 remote::RemoteClient *remote_client_mysys = 0;
 
@@ -182,51 +183,37 @@ int GetPathByFd(int fd, char *buf) {
 }
 //! return 0, represents file in local
 int file_should_be_local_mysys(const char *path){
-  if(0 == strncmp(path, "./sys"
-          , strlen("./sys"))
+  if(0 == strncmp(path, "./sys", strlen("./sys"))
   ) {
       return -1;
   }
   if(std::string(path).find(".ibd") != std::string::npos
   ) {
       return -1;
-//      return 0;
   }
-  if(0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
-          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"))
-  || 0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"
-          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
-  || 0 == strncmp(path, "/home/zhangrongrong/mysql/local/mysql80"
-          , strlen("/home/zhangrongrong/mysql/local/mysql80"))
+  if(0 == strncmp(path, multi_master::share_build_dir.data(), multi_master::share_build_dir.size())
+  || 0 == strncmp(path, multi_master::share_src_dir.data(), multi_master::share_src_dir.size())
+  || 0 == strncmp(path, multi_master::install_dir.data(), multi_master::install_dir.size())
   ) {
         return 0;
-  } else {
-      return 0;
   }
+      return 0;
 }
 //! return 0, represents file in local
 int dir_should_be_local_mysys(const char *path){
-  if(0 == strncmp(path, "./sys"
-          , strlen("./sys"))
+  if(0 == strncmp(path, "./sys", strlen("./sys"))
   ) {
       return -1;
   }
-  if(0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"
-          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share"))
-  || 0 == strncmp(path, "/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"
-          , strlen("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share"))
-  || 0 == strncmp(path, "/home/zhangrongrong/mysql/local/mysql80"
-          , strlen("/home/zhangrongrong/mysql/local/mysql80"))
-  || 0 == strncmp(path, "./performance_schema"
-          , strlen("./performance_schema"))
-  || 0 == strncmp(path, "./mysql"
-          , strlen("./mysql"))
+  if(0 == strncmp(path, multi_master::share_build_dir.data(), multi_master::share_build_dir.size())
+  || 0 == strncmp(path, multi_master::share_src_dir.data(), multi_master::share_src_dir.size())
+  || 0 == strncmp(path, multi_master::install_dir.data(), multi_master::install_dir.size())
+  || 0 == strncmp(path, "./performance_schema", strlen("./performance_schema"))
+  || 0 == strncmp(path, "./mysql", strlen("./mysql"))
   ) {
         return 0;
-  } else {
-      return -1;
-//      return 0;
   }
+      return -1;
 }
 
 int get_remote_fd_mysys(int fd){
@@ -255,8 +242,9 @@ int get_remote_fd_mysys(int fd){
 //          map_path_mysys.erase(remote_fd);
 //      } else {
 //        #ifdef MULTI_MASTER_ZHANG_LOG
-//          EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "[error] no such file, remote fd:" << remote_fd;
+//          EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "[error] no such file, remote fd:" << remote_fd;
 //        #endif // MULTI_MASTER_ZHANG_LOG
 //      }
 //    return 0;
 //}
+#endif //! MULTI_MASTER_ZHANG_REMOTE

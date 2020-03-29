@@ -93,7 +93,7 @@ int my_sync(File fd, myf my_flags) {
     res = fdatasync(fd);
 #elif defined(HAVE_FSYNC)
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_sync::sync. try to fsync fd:" << fd;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_sync::sync. try to fsync fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int remote_fd = get_remote_fd_mysys(fd);

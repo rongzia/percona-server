@@ -1096,6 +1096,4 @@ size_t mysql_encryption_file_write(IO_CACHE *cache, const uchar *buffer,
 size_t mysql_encryption_file_pread(IO_CACHE *cache, uchar *buffer, size_t count,
                                    my_off_t offset, myf flags);
 
-//#include "remote_client.h"
-//extern remote::RemoteClient *remote_client;
 #endif /* _my_sys_h */

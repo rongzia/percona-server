@@ -355,7 +355,10 @@ ENDFOREACH()
 # with the list of API functions.
 #
 CONFIGURE_FILE(api_test.c.in ${CMAKE_CURRENT_BINARY_DIR}/api_test.c)
-# MULTI_MASTER_ZHANG 注释掉以下内容，不生成 libmysql_api_test，也不做测试。多行注释 #[[ ... ]]
+# START MULTI_MASTER_ZHANG
+# 开始编 grpc 进去的时候，在执行 test 时会出错，注释掉以下内容，不生成 libmysql_api_test，也不做测试。多行注释 #[[ ... ]]
+# 后来这个问题解决了，当前 CMakeList.txt 不需要做任何修改
+# END MULTI_MASTER_ZHANG
 
 #
 # Note: Compiling this test application will fail if not all symbols
@@ -368,7 +371,9 @@ MYSQL_ADD_EXECUTABLE(libmysql_api_test
 SET_TARGET_PROPERTIES(libmysql_api_test PROPERTIES LINKER_LANGUAGE CXX)
 
 IF(LIBRT)
+# START MULTI_MASTER_ZHANG
 #  message("percona-server/libmysql/CMakeLists.txt : LIBRT")
+# END MULTI_MASTER_ZHANG
   TARGET_LINK_LIBRARIES(libmysql_api_test ${LIBRT}
 # START MULTI_MASTER_ZHANG
 #  ${remote_fun} ${PROTOBUF_LIBRARY} ${GRPC_STATIC_LIBRARY} ${ZLIB_LIBRARY} pthread

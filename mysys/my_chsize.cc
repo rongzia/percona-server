@@ -91,7 +91,7 @@ int my_chsize(File fd, my_off_t newlength, int filler, myf MyFlags) {
     DBUG_RETURN(0);
 #elif defined(HAVE_FTRUNCATE)
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_chsize::ftruncate. try to ftruncate fd:" << fd;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_chsize::ftruncate. try to ftruncate fd:" << fd;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
     int ret;
@@ -106,7 +106,7 @@ int my_chsize(File fd, my_off_t newlength, int filler, myf MyFlags) {
     if (ftruncate(fd, (off_t)newlength)) {
 #endif // MULTI_MASTER_ZHANG_REMOTE
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_chsize::ftruncate. try to ftruncate fd:" << fd << ", size:" << (off_t)newlength;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_chsize::ftruncate. try to ftruncate fd:" << fd << ", size:" << (off_t)newlength;
 #endif // MULTI_MASTER_ZHANG_LOG
       set_my_errno(errno);
       goto err;

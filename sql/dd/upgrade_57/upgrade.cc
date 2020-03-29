@@ -843,7 +843,10 @@ bool do_pre_checks_and_initialize_dd(THD *thd) {
   bool not_used;
   build_table_filename(path, sizeof(path) - 1, "", "mysql", ".ibd", 0,
                        &not_used);
+#ifdef MULTI_MASTER_ZHANG_REMOTE
+//! mysql 启动时，会检查 mysql.ibd 是否存在，当把 mysql 放在远程时，就回出错。
 //  bool exists_mysql_tablespace = (!my_access(path, F_OK));
+#endif //! MULTI_MASTER_ZHANG_REMOTE
   bool exists_mysql_tablespace = true;
 
   // Check existence of mysql/plugin.frm

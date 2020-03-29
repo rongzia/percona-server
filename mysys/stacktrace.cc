@@ -125,12 +125,12 @@ static int safe_print_str(const char *addr, int max_len) {
   sprintf(buf, "/proc/self/task/%d/mem", tid);
 
 //#ifdef MULTI_MASTER_ZHANG_LOG
-//  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::open. create or open file:" << buf;
+//  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::open. create or open file:" << buf;
 //#endif // MULTI_MASTER_ZHANG_LOG
 //! do not need remote io
   if ((fd = open(buf, O_RDONLY)) < 0) return -1;
 //#ifdef MULTI_MASTER_ZHANG_LOG
-//  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::open. create or open file:" << buf << ", fd:" << fd;
+//  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::open. create or open file:" << buf << ", fd:" << fd;
 //#endif // MULTI_MASTER_ZHANG_LOG
 
   static_assert(sizeof(off_t) >= sizeof(intptr),
@@ -143,7 +143,7 @@ static int safe_print_str(const char *addr, int max_len) {
   while (total) {
     count = MY_MIN(sizeof(buf), total);
 //#ifdef MULTI_MASTER_ZHANG_LOG
-//  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::pread. try to pread fd:" << fd;
+//  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::pread. try to pread fd:" << fd;
 //#endif // MULTI_MASTER_ZHANG_LOG
 //! do not need remote io
     if ((nbytes = pread(fd, buf, count, offset)) < 0) {
@@ -171,7 +171,7 @@ static int safe_print_str(const char *addr, int max_len) {
 
   if (nbytes == -1) my_safe_printf_stderr("Can't read from address %p\n", addr);
 //#ifdef MULTI_MASTER_ZHANG_LOG
-//  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::close. try to close fd:" << fd;
+//  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "safe_print_str::close. try to close fd:" << fd;
 //#endif // MULTI_MASTER_ZHANG_LOG
 //! do not need remote io
   close(fd);

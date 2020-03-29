@@ -1182,6 +1182,7 @@ MYSQL_CHECK_RAPIDJSON()
 
 # START MULTI_MASTER_ZHANG
 message("---------------------------- start MULTI_MASTER_ZHANG, line : " ${CMAKE_CURRENT_LIST_LINE})
+# 下面两个宏定义在 extra/multi_master/include/multi_maroc.h 中
 #add_definitions(-DMULTI_MASTER_ZHANG_LOG)
 #add_definitions(-DMULTI_MASTER_ZHANG_REMOTE)
 INCLUDE_DIRECTORIES(
@@ -1194,12 +1195,14 @@ message("find RAPIDJSON_INCLUDE_DIR : " ${RAPIDJSON_INCLUDE_DIR})
 option(NO_DEBUG_REMOTE_SINGLE "option for not debug remote single" ON)
 
 # for libevent
-#set(REMOTE_FUN_WITH_LIBEENT "1")
-#if (REMOTE_FUN_WITH_LIBEENT STREQUAL "1")
-#  include_directories(${LIBEVENT_INCLUDE_DIRS})
-#  set(multi_net_io ${PROJECT_SOURCE_DIR}/extra/multi_master/remote_fun/lib/libmulti_net_io.a)
-#  set(event ${PROJECT_SOURCE_DIR}/extra/multi_master/remote_fun/lib/libevent.a)
-#endif ()
+#[[
+set(REMOTE_FUN_WITH_LIBEENT "1")
+if (REMOTE_FUN_WITH_LIBEENT STREQUAL "1")
+  include_directories(${LIBEVENT_INCLUDE_DIRS})
+  set(multi_net_io ${PROJECT_SOURCE_DIR}/extra/multi_master/remote_fun/lib/libmulti_net_io.a)
+  set(event ${PROJECT_SOURCE_DIR}/extra/multi_master/remote_fun/lib/libevent.a)
+endif ()
+]]
 
 # for grpc
 set(REMOTE_FUN_WITH_GRPC "1")
@@ -1207,6 +1210,7 @@ if (REMOTE_FUN_WITH_GRPC STREQUAL "1")
   message("find ZLIB_LIBRARY : " ${ZLIB_LIBRARY})
   set(GRPC_ROOT $ENV{HOME}/.local/grpc-v1.23.x)
   include(${PROJECT_SOURCE_DIR}/extra/multi_master/remote_fun/cmake/grpc.cmake)
+# 不需要单独使用系统的 protobuf，mysql 里面整合了 protobuf 静态库
 endif ()
 
 add_subdirectory(extra/multi_master/remote_fun)

@@ -55,7 +55,7 @@ int my_rename(const char *from, const char *to, myf MyFlags) {
     my_osmaperr(GetLastError());
 #else
 #ifdef MULTI_MASTER_ZHANG_LOG
-  EasyLoggerWithTrace(path_log_mysys, EasyLogger::info).force_flush() << "my_rename::rename. try to rename from " << from << " to " << to;
+  EasyLoggerWithTrace(multi_master::path_log_mysys, EasyLogger::info).force_flush() << "my_rename::rename. try to rename from " << from << " to " << to;
 #endif // MULTI_MASTER_ZHANG_LOG
 #ifdef MULTI_MASTER_ZHANG_REMOTE
   int ret;
