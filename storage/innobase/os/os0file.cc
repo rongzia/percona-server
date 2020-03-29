@@ -4739,7 +4739,7 @@ void Dir_Walker::walk_posix(const Path &basedir, bool recursive, Function &&f){
   EasyLoggerWithTrace(multi_master::path_log, EasyLogger::info).force_flush() << "try to opendir, by walk_posix()." << basedir;
 #endif // MULTI_MASTER_ZHANG_LOG
   //! 该函数在 os0file 线程启动前调用。
-//    remote::RemoteClient *remote_client2 = new remote::RemoteClient("10.11.6.120", "50051", "null");
+//    remote::RemoteClient *remote_client2 = new remote::RemoteClient(multi_master::server_addr, multi_master::server_port, "null");
     std::vector<remote::StructHandle::Entry> remote_entry = remote_client->remote_opendir(basedir, recursive);
     std::vector<remote::StructHandle::Entry> local_entry;
     DirWalk(remote::StructHandle::Entry(basedir, 0), recursive, &local_entry);
@@ -7386,7 +7386,6 @@ bool AIO::start(ulint n_per_seg, ulint n_readers, ulint n_writers,
     srv_use_native_aio = FALSE;
   }
 #endif /* LINUX_NATIVE_AIO */
-//remote_client = new remote::RemoteClient("10.11.6.120", "50051", "10002");
   srv_reset_io_thread_op_info();
 
   s_reads =

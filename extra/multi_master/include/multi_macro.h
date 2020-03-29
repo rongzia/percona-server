@@ -21,5 +21,7 @@ namespace multi_master {
     static const std::string share_build_dir = std::string("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/build/share");
     static const std::string share_src_dir = std::string("/home/zhangrongrong/CLionProjects/Percona-Share-Storage/percona-server/share");
     static const std::string install_dir = std::string("/home/zhangrongrong/mysql/local/mysql80");
+    static const std::string server_addr = std::string("10.11.6.120");
+    static const std::string server_port = std::string("50051");
 }
 #endif //MYSQL_MULTI_MACRO_H

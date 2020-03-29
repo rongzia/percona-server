@@ -2025,7 +2025,7 @@ static dberr_t srv_sys_enable_encryption(bool create_new_db) {
 @return DB_SUCCESS or error code */
 remote::RemoteClient *remote_client = 0;
 dberr_t srv_start(bool create_new_db, const std::string &scan_directories) {
-  remote_client = new remote::RemoteClient("10.11.6.120", "50051", "null");
+  remote_client = new remote::RemoteClient(multi_master::server_addr, multi_master::server_port, "null");
   lsn_t flushed_lsn;
 
   /* just for assertions */
